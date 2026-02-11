@@ -4,7 +4,7 @@ public class Evolution {
 
 
     /*
-    inicializa(); //crea población inicial de cromosomas
+    inicializa();
     evaluarPoblacion(); //evalúa los individuos y coge el mejor
     while (!terminado()) {
         numgeneracion++;
