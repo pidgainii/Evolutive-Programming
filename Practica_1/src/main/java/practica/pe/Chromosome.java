@@ -11,7 +11,6 @@ public class Chromosome {
     private final int xCoordinateSize;
     private final int yCoordinateSize;
     private final int chromosomeSize;
-    private int cameraRange;
 
     public Chromosome(int boardSizeX, int boardSizeY, int nCameras) {
         // Creating a random chromosome

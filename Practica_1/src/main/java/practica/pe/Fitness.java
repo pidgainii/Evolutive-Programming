@@ -21,6 +21,7 @@ public class Fitness {
             // If valid, we add it to board obstacles (cameras can't see through cameras)
             // If not valid, we substract 100 points from fitness
             if (isCoordValid(coord, board)) board[coord.x()][coord.y()] = 1;
+            // TODO: We have to do this before starting the loop
             else
             {
                 fitness -= 100;

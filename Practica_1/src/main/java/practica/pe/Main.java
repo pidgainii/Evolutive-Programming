@@ -9,8 +9,8 @@ public class Main {
     public static void main(String[] args) {
 
         final int populationSize = 10;
-        final int boardSizeX = 10;
-        final int boardSizeY = 10;
+        final int boardSizeX = 7;
+        final int boardSizeY = 7;
         final int nCameras = 2;
         final int cameraRange = 3;
 
@@ -23,28 +23,48 @@ public class Main {
             population.add(new Chromosome(boardSizeX, boardSizeY, nCameras));
         }
 
+        int[][] tablero0 = new int[][]{
+                {0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0},
+        };
 
         int[][] tablero1 = new int[][]{
-                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 1, 0, 0, 0, 1},
+                {0, 1, 0, 0, 1, 1, 0},
+                {0, 1, 0, 0, 1, 0, 0},
+                {1, 1, 0, 0, 0, 0, 0},
+                {0, 0, 1, 1, 0, 0, 0},
+                {0, 1, 0, 0, 1, 0, 1},
+                {0, 0, 0, 0, 1, 0, 1},
+        };
+
+        int[][] tablero2 = new int[][]{
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         };
 
 
-        for (Chromosome c: population)
-        {
-            System.out.println(c.getGenotype());
-            System.out.println(c.getFenotype());
+        Evolution evolution = new Evolution(populationSize, boardSizeX, boardSizeY, nCameras, cameraRange, tablero1);
+        evolution.evolute(10);
 
-            System.out.println("Puntuación: " + Fitness.getFitness(c.getFenotype(), cameraRange, tablero1) + "\n");
-        }
 
     }
 }
