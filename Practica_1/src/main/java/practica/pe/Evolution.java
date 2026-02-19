@@ -31,9 +31,9 @@ public class Evolution {
 
             Selection.roulette(population, newPopulation, population_size);
 
-            populationCross(newPopulation, crossProbability);
+            populationCross(newPopulation, crossProbability, rand);
 
-            mutatePopulation(newPopulation, mutationProbability);
+            mutatePopulation(newPopulation, mutationProbability, rand);
 
             evaluateAndNormalize(newPopulation);
 
@@ -44,36 +44,37 @@ public class Evolution {
         return this.globalBest;
     }
 
-    public void populationCross(Population population, double crossProbability) {
+    public void populationCross(Population population, double crossProbability, Random rand) {
 
-        ArrayList<Chromosome> selected = new ArrayList<>();
-        Random rand = new Random();
+        ArrayList<Integer> selectedIdx = new ArrayList<>();
 
-        for (Chromosome individual : population.getPopulation()) {
+        for (int idx = 0; idx < population.getPopulation().size(); idx++) {
             if (rand.nextDouble() < crossProbability) {
-                selected.add(individual);
+                selectedIdx.add(idx);
             }
         }
 
-        if (selected.size() % 2 != 0) {
-            selected.removeLast();
+        if (selectedIdx.size() % 2 != 0) {
+            selectedIdx.removeLast();
         }
 
-        for (int i = 0; i < selected.size(); i += 2) {
+        for (int i = 0; i < selectedIdx.size(); i += 2) {
 
-            Chromosome father1 =  selected.get(i);
-            Chromosome father2 = selected.get(i + 1);
+            int idx1 = selectedIdx.get(i);
+            int idx2 = selectedIdx.get(i + 1);
 
-            Chromosome[] children = father1.cross(father2);
+            Chromosome father1 = population.getPopulation().get(idx1);
+            Chromosome father2 = population.getPopulation().get(idx2);
 
-            population.swap(i, children[0]);
-            population.swap(i + 1, children[1]);
+            Chromosome[] children = father1.cross(father2, rand);
+
+            population.swap(idx1, children[0]);
+            population.swap(idx2, children[1]);
         }
     }
 
-    public void mutatePopulation(Population population, double mutationProbability) {
+    public void mutatePopulation(Population population, double mutationProbability, Random rand) {
 
-        Random rand = new Random();
         for (Chromosome individual : population.getPopulation()) {
             boolean mutated = false;
             char[] genesArray = individual.getGenes().toCharArray();
@@ -88,32 +89,51 @@ public class Evolution {
 
             if (mutated) {
                 individual.setGenes(new String(genesArray));
-                individual.setFitness(fitness.evaluate(individual));
             }
         }
     }
 
     public void evaluateAndNormalize(Population population) {
 
-        int fitnessSum = 0;
-        Chromosome localBest = population.getPopulation().getFirst();
-
         for (Chromosome individual : population.getPopulation()) {
-            fitnessSum += individual.getFitness();
-            if (individual.getFitness() > this.globalBest.getFitness()) {
+            individual.setFitness(fitness.evaluate(individual));
+        }
+
+        Chromosome localBest = population.getPopulation().getFirst();
+        for (Chromosome individual : population.getPopulation()) {
+            if (individual.getFitness() > localBest.getFitness()) {
                 localBest = individual;
             }
         }
 
-        if (localBest.getFitness() > this.globalBest.getFitness()) {
-           this.globalBest = localBest.clone();
+        if (this.globalBest == null || localBest.getFitness() > this.globalBest.getFitness()) {
+            this.globalBest = localBest.clone();
         }
 
-        double acumulated = 0;
-        for  (Chromosome individual : population.getPopulation()) {
-            individual.setRelative_fitness((double) individual.getFitness() / fitnessSum);
-            acumulated += individual.getRelative_fitness();
-            individual.setAcum_fitness(acumulated);
+        int minFitness = Integer.MAX_VALUE;
+        int maxFitness = Integer.MIN_VALUE;
+        for (Chromosome individual : population.getPopulation()) {
+            minFitness = Math.min(minFitness, individual.getFitness());
+            maxFitness = Math.max(maxFitness, individual.getFitness());
         }
+
+        double fitnessSum = 0.0;
+        for (Chromosome individual : population.getPopulation()) {
+            double shifted = (double) (individual.getFitness() - minFitness);
+            fitnessSum += shifted;
+        }
+
+        double accumulated = 0.0;
+        for (Chromosome individual : population.getPopulation()) {
+            double shifted = (double) (individual.getFitness() - minFitness);
+
+            double rel = shifted / fitnessSum;
+            accumulated += rel;
+
+            individual.setRelative_fitness(rel);
+            individual.setAcum_fitness(accumulated);
+        }
+
+        population.getPopulation().getLast().setAcum_fitness(1.0);
     }
 }

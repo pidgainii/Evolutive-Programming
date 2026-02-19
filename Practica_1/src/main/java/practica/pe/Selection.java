@@ -6,8 +6,9 @@ public class Selection {
 
     public static void roulette(Population actualPopulation, Population newPopulation, int populationSize) {
 
+        Random rand = new Random();
+
         for (int i = 0; i < populationSize; i++) {
-            Random rand = new Random();
             double prob = rand.nextDouble();
 
             int pos = 0;
@@ -15,7 +16,7 @@ public class Selection {
                 pos++;
             }
 
-            newPopulation.getPopulation().set(pos, actualPopulation.getPopulation().get(pos));
+            newPopulation.getPopulation().set(i, actualPopulation.getPopulation().get(pos).clone());
         }
     }
 }

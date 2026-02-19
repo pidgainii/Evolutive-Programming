@@ -58,9 +58,8 @@ public class Chromosome {
         this.relative_fitness = relative_fitness;
     }
 
-    public Chromosome[] cross(Chromosome other) {
+    public Chromosome[] cross(Chromosome other, Random rand) {
 
-        Random rand = new Random();
         int point = rand.nextInt(genes.length());
 
         String childGenes1 =

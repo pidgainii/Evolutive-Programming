@@ -23,8 +23,8 @@ public class Main {
                 {0, 0, 0, 0, 0, 0, 0, 1, 0, 0}
         };
 
-        int NUM_CAMARAS = 2;
-        int RANGO_VISION = 3;
+        int NUM_CAMARAS = 1;
+        int RANGO_VISION = 4;
         int N = 10;
         int M = 10;
 
