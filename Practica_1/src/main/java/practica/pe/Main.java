@@ -8,20 +8,15 @@ import java.util.ArrayList;
 public class Main {
     public static void main(String[] args) {
 
-        final int populationSize = 10;
-        final int boardSizeX = 7;
-        final int boardSizeY = 7;
-        final int nCameras = 2;
-        final int cameraRange = 3;
+        final int populationSize = 50;
+        final int boardSizeX = 12;
+        final int boardSizeY = 15;
+        final int nCameras = 7;
+        final int cameraRange = 2;
+        final double crossingProb = 0.5;
+        final double mutationProb = 0.02;
+        final int eliteSize = 5;
 
-        // Creating population, which is an ArrayList of chromosomes
-        ArrayList<Chromosome> population = new ArrayList<Chromosome>(populationSize);
-
-        // Initializing population with random chromosomes
-        for (int i = 0; i < populationSize; i++)
-        {
-            population.add(new Chromosome(boardSizeX, boardSizeY, nCameras));
-        }
 
         int[][] tablero0 = new int[][]{
                 {0, 0, 0, 0, 0, 0, 0},
@@ -34,13 +29,26 @@ public class Main {
         };
 
         int[][] tablero1 = new int[][]{
-                {0, 0, 1, 0, 0, 0, 1},
-                {0, 1, 0, 0, 1, 1, 0},
-                {0, 1, 0, 0, 1, 0, 0},
-                {1, 1, 0, 0, 0, 0, 0},
-                {0, 0, 1, 1, 0, 0, 0},
-                {0, 1, 0, 0, 1, 0, 1},
-                {0, 0, 0, 0, 1, 0, 1},
+                {0, 0, 0, 0, 0, 0, 0},
+                {0, 1, 0, 1, 0, 1, 0},
+                {0, 0, 0, 0, 0, 0, 0},
+                {0, 1, 0, 1, 0, 1, 0},
+                {0, 0, 0, 0, 0, 0, 0},
+                {0, 1, 0, 1, 0, 1, 0},
+                {0, 0, 0, 0, 0, 0, 0},
+        };
+
+        int[][] tablero10 = new int[][]{
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 1, 0, 1, 0, 1, 0, 1, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 1, 0, 1, 0, 1, 0, 1, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 1, 0, 1, 0, 1, 0, 1, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 1, 0, 1, 0, 1, 0, 1, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 1, 0, 1, 0, 1, 0, 1, 0, 0}
         };
 
         int[][] tablero2 = new int[][]{
@@ -61,9 +69,23 @@ public class Main {
                 {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         };
 
+        int[][] tablero12 = new int[][]{
+                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+                {1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
+                {1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1},
+                {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+                {1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1},
+                {1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        };
 
-        Evolution evolution = new Evolution(populationSize, boardSizeX, boardSizeY, nCameras, cameraRange, tablero1);
-        evolution.evolute(10);
+        Evolution e = new Evolution();
+        Graphic g = new Graphic(e, boardSizeX, boardSizeY, nCameras, cameraRange, tablero12);
 
 
     }
