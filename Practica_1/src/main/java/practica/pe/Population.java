@@ -9,7 +9,7 @@ public class Population {
 
     private final ArrayList<Chromosome> population;
 
-    public Population(int size, int totalBits) {
+    public Population(Fitness fitness, int size, int totalBits) {
 
         this.population = new ArrayList<>();
         Random rand = new Random();
@@ -22,11 +22,17 @@ public class Population {
                 gene.append(rand.nextBoolean() ? '1' : '0');
             }
 
-            this.population.add(new Chromosome(gene.toString()));
+            Chromosome newChromosome = new Chromosome(gene.toString());
+            newChromosome.setFitness(fitness.evaluate(newChromosome));
+            this.population.add(newChromosome);
         }
     }
 
     public ArrayList<Chromosome> getPopulation() {
         return population;
+    }
+
+    public void swap(int index, Chromosome chromosome) {
+        population.set(index, chromosome);
     }
 }

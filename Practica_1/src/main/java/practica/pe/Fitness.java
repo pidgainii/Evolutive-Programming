@@ -8,8 +8,8 @@ public class Fitness {
         private final int[][] map;
         private final int NUM_CAMARAS;
         private final int RANGO_VISION;
-        private int N;
-        private int M;
+        private final int N;
+        private final int M;
 
         public Fitness(int[][] map, int numCamaras, int rangoVision, int N, int M) {
             this.map = map;
@@ -18,6 +18,7 @@ public class Fitness {
             this.N = N;
             this.M = M;
         }
+
 
         public int evaluate(Chromosome individual) {
 
@@ -87,7 +88,6 @@ public class Fitness {
                 }
             }
 
-            individual.setFitness(result);
             return result;
         }
 
