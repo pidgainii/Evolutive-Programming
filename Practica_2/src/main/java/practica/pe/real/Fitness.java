@@ -46,7 +46,7 @@ public class Fitness {
 
             Pair position = new Pair(cellX, cellY);
 
-            if (map[cellX][cellY] == 1 || cameraPositions.contains(position)) {
+            if (map[cellX][cellY] == 0 || cameraPositions.contains(position)) {
                 result -= 100;
                 continue;
             }
@@ -83,7 +83,7 @@ public class Fitness {
                     Pair cell = new Pair(i, j);
                     if (!seen.contains(cell)) {
                         seen.add(cell);
-                        result++;
+                        result += map[cellX][cellY];
                     }
 
                 }
@@ -114,7 +114,7 @@ public class Fitness {
                 return true;
             }
 
-            if (map[cellX][cellY] == 1) {
+            if (map[cellX][cellY] == 0) {
                 return true;
             }
 

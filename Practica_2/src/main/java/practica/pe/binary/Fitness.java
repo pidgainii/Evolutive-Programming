@@ -40,7 +40,7 @@ public class Fitness {
                 int x = Integer.parseInt(xBinary, 2);
                 int y = Integer.parseInt(yBinary, 2);
 
-                    if (x < 0 || y < 0 || x >= N || y >= M || map[x][y] == 1) {
+                    if (x < 0 || y < 0 || x >= N || y >= M || map[x][y] == 0) {
                     result -= 100;
                     continue;
                 }
@@ -55,7 +55,7 @@ public class Fitness {
 
                 if (!set.contains(posCam)) {
                     set.add(posCam);
-                    result++;
+                    result += map[x][y];
                 }
 
                 int[] dx = {-1, 1, 0, 0};
@@ -76,10 +76,10 @@ public class Fitness {
                             break;
                         }
 
-                        if (map[newX][newY] == 0) {
+                        if (map[newX][newY] != 0) {
                             if (!set.contains(pos)) {
                                 set.add(pos);
-                                result++;
+                                result += map[newX][newY];
                             }
                         } else {
                             break;
