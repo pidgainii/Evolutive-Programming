@@ -1,9 +1,4 @@
-package main.java.practica.pe;
-
-import main.java.practica.pe.Fitness;
-import main.java.practica.pe.Population;
-
-import java.util.Random;
+package practica.pe;
 
 public class Main {
 
@@ -24,7 +19,7 @@ public class Main {
         };
 
         int NUM_CAMARAS = 1;
-        int RANGO_VISION = 4;
+        int RANGO_VISION = 1;
         int N = 10;
         int M = 10;
 

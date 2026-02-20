@@ -1,4 +1,4 @@
-package main.java.practica.pe;
+package practica.pe.binary;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -40,7 +40,7 @@ public class Fitness {
                 int x = Integer.parseInt(xBinary, 2);
                 int y = Integer.parseInt(yBinary, 2);
 
-                if (x < 0 || y < 0 || x >= N || y >= M || map[x][y] == 1) {
+                    if (x < 0 || y < 0 || x >= N || y >= M || map[x][y] == 1) {
                     result -= 100;
                     continue;
                 }

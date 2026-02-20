@@ -1,6 +1,4 @@
-package main.java.practica.pe;
-
-import main.java.practica.pe.Chromosome;
+package practica.pe.binary;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -26,6 +24,10 @@ public class Population {
             newChromosome.setFitness(fitness.evaluate(newChromosome));
             this.population.add(newChromosome);
         }
+    }
+
+    public Population() {
+        this.population = new ArrayList<>();
     }
 
     public ArrayList<Chromosome> getPopulation() {

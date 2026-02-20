@@ -1,6 +1,8 @@
-package main.java.practica.pe;
+package practica.pe.binary;
 
-import main.java.practica.pe.Population;
+import practica.pe.enums.SelectionMethod;
+import practica.pe.ui.EvolutionListener;
+import practica.pe.ui.GAResult;
 
 import java.util.*;
 
@@ -18,33 +20,7 @@ public class Evolution {
         globalBest = null;
     }
 
-    public Chromosome evolve(int nGenerations, Population population, double crossProbability, double mutationProbability) {
-
-        this.globalBest = population.getPopulation().getFirst().clone();
-        evaluateAndNormalize(population);
-
-        Random rand = new Random();
-
-        for (int i = 0; i < nGenerations; i++) {
-
-            Population newPopulation = new Population(fitness, this.population_size, this.total_bits);
-
-            Selection.roulette(population, newPopulation, population_size);
-
-            populationCross(newPopulation, crossProbability, rand);
-
-            mutatePopulation(newPopulation, mutationProbability, rand);
-
-            evaluateAndNormalize(newPopulation);
-
-            population = newPopulation;
-
-        }
-
-        return this.globalBest;
-    }
-
-    public void populationCross(Population population, double crossProbability, Random rand) {
+    public void populationCross(Population population, double crossProbability, String crossoverMethodString, Random rand) {
 
         ArrayList<Integer> selectedIdx = new ArrayList<>();
 
@@ -66,7 +42,10 @@ public class Evolution {
             Chromosome father1 = population.getPopulation().get(idx1);
             Chromosome father2 = population.getPopulation().get(idx2);
 
-            Chromosome[] children = father1.cross(father2, rand);
+            CrossoverMethod cm = CrossoverMethod.valueOf(crossoverMethodString);
+            Chromosome[] children = (cm == CrossoverMethod.UNIFORM)
+                    ? father1.crossUniform(father2, rand)
+                    : father1.cross(father2, rand);
 
             population.swap(idx1, children[0]);
             population.swap(idx2, children[1]);
@@ -135,5 +114,62 @@ public class Evolution {
         }
 
         population.getPopulation().getLast().setAcum_fitness(1.0);
+    }
+
+    public GAResult evolveWithListener(int nGenerations,
+                                       Population population,
+                                       double crossProbability,
+                                       double mutationProbability,
+                                       double elitismRate,
+                                       String selectionMethodString,
+                                       String crossoverMethodString,
+                                       EvolutionListener listener) {
+
+        this.globalBest = population.getPopulation().getFirst().clone();
+        evaluateAndNormalize(population);
+
+        int[] bestOfGen = new int[nGenerations];
+        int[] globalBestSoFar = new int[nGenerations];
+        double[] avgFitness = new double[nGenerations];
+
+        Random rand = new Random();
+
+        for (int gen = 0; gen < nGenerations; gen++) {
+
+            Population newPopulation = new Population(fitness, this.population_size, this.total_bits);
+
+            SelectionMethod method = SelectionMethod.valueOf(selectionMethodString);
+            Selection.select(method, population, newPopulation, population_size, rand);
+            populationCross(newPopulation, crossProbability, crossoverMethodString, rand);
+            mutatePopulation(newPopulation, mutationProbability, rand);
+            evaluateAndNormalize(newPopulation);
+
+            int best = Integer.MIN_VALUE;
+            long sum = 0;
+            Chromosome bestChr = newPopulation.getPopulation().getFirst();
+
+            for (Chromosome c : newPopulation.getPopulation()) {
+                int f = c.getFitness();
+                sum += f;
+                if (f > best) {
+                    best = f;
+                    bestChr = c;
+                }
+            }
+
+            double avg = (double) sum / newPopulation.getPopulation().size();
+
+            bestOfGen[gen] = best;
+            globalBestSoFar[gen] = this.globalBest.getFitness();
+            avgFitness[gen] = avg;
+
+            if (listener != null) {
+                listener.onGeneration(gen, bestOfGen[gen], globalBestSoFar[gen], avgFitness[gen], bestChr.clone());
+            }
+
+            population = newPopulation;
+        }
+
+        return new GAResult(this.globalBest.clone(), bestOfGen, globalBestSoFar, avgFitness);
     }
 }

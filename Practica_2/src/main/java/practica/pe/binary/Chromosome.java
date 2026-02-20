@@ -1,6 +1,5 @@
-package main.java.practica.pe;
+package practica.pe.binary;
 
-import java.awt.*;
 import java.util.Random;
 
 public class Chromosome {
@@ -76,4 +75,22 @@ public class Chromosome {
         };
     }
 
+    public Chromosome[] crossUniform(Chromosome other, java.util.Random rand) {
+        char[] a = this.genes.toCharArray();
+        char[] b = other.genes.toCharArray();
+        char[] c1 = new char[a.length];
+        char[] c2 = new char[a.length];
+
+        for (int i = 0; i < a.length; i++) {
+            if (rand.nextBoolean()) {
+                c1[i] = a[i];
+                c2[i] = b[i];
+            } else {
+                c1[i] = b[i];
+                c2[i] = a[i];
+            }
+        }
+
+        return new Chromosome[]{ new Chromosome(new String(c1)), new Chromosome(new String(c2)) };
+    }
 }
