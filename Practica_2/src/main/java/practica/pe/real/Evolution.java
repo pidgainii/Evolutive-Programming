@@ -26,22 +26,21 @@ public class Evolution {
         globalBest = null;
     }
 
-    public void populationCross(Population population, double crossProbability, String crossoverMethodString, Random rand) {
+    public void populationCross(Population population,
+                                double crossProbability,
+                                String crossoverMethodString,
+                                Random rand,
+                                int startIdx) {
 
         ArrayList<Integer> selectedIdx = new ArrayList<>();
 
-        for (int idx = 0; idx < population.getPopulation().size(); idx++) {
-            if (rand.nextDouble() < crossProbability) {
-                selectedIdx.add(idx);
-            }
+        for (int idx = startIdx; idx < population.getPopulation().size(); idx++) {
+            if (rand.nextDouble() < crossProbability) selectedIdx.add(idx);
         }
 
-        if (selectedIdx.size() % 2 != 0) {
-            selectedIdx.removeLast();
-        }
+        if (selectedIdx.size() % 2 != 0) selectedIdx.removeLast();
 
         for (int i = 0; i < selectedIdx.size(); i += 2) {
-
             int idx1 = selectedIdx.get(i);
             int idx2 = selectedIdx.get(i + 1);
 
@@ -54,7 +53,7 @@ public class Evolution {
                 case ONE_POINT -> father1.cross(father2, rand);
                 case UNIFORM -> father1.crossUniform(father2, rand);
                 case ARITHMETIC -> father1.crossArithmetic(father2, rand);
-                case BLX_ALPHA -> father1.crossBlxAlpha(father2, rand, 0.5); // alpha=0.5 típico
+                case BLX_ALPHA -> father1.crossBlxAlpha(father2, rand, 0.5);
             };
 
             population.swap(idx1, children[0]);
@@ -62,18 +61,28 @@ public class Evolution {
         }
     }
 
-    public void mutatePopulation(Population population, double mutationProbability, String mutationMethodString, Random rand) {
+    public void mutatePopulation(Population population,
+                                 double mutationProbability,
+                                 String mutationMethodString,
+                                 Random rand,
+                                 int startIdx) {
 
         double sigmaX = 0.5;
         double sigmaY = 0.5;
         double sigmaTheta = 10.0;
+
         MutationMethod mm = MutationMethod.valueOf(mutationMethodString);
-        for (Chromosome individual: population.getPopulation()) {
+
+        for (int idx = startIdx; idx < population.getPopulation().size(); idx++) {
+            Chromosome individual = population.getPopulation().get(idx);
+
             switch (mm) {
                 case GAUSSIAN -> individual.mutateGaussian(rand, mutationProbability, num_cameras, N, M,
                         sigmaX, sigmaY, sigmaTheta);
                 case GENE -> individual.mutateGeneLevel(rand, mutationProbability, num_cameras, N, M);
-            }            individual.setFitness(fitness.evaluate(individual));
+            }
+
+            individual.setFitness(fitness.evaluate(individual));
         }
     }
 
@@ -139,12 +148,28 @@ public class Evolution {
 
         for (int gen = 0; gen < nGenerations; gen++) {
 
+            int eliteCount = (int) Math.round(population_size * elitismRate);
+            eliteCount = Math.max(0, Math.min(eliteCount, population_size));
+
+            // 1) capturar élite de la población actual
+            ArrayList<Chromosome> elite = getElite(population, eliteCount);
+
+            // 2) crear nueva población con tamaño y seleccionar como siempre
             Population newPopulation = new Population(fitness, this.population_size, this.num_cameras, N, M);
 
             SelectionMethod method = SelectionMethod.valueOf(selectionMethodString);
             Selection.select(method, population, newPopulation, population_size, rand);
-            populationCross(newPopulation, crossProbability,crossOverMethodString, rand);
-            mutatePopulation(newPopulation, mutationProbability, mutationMethodString, rand);
+
+            // 3) reinsertar élite al principio
+            for (int i = 0; i < elite.size(); i++) {
+                newPopulation.swap(i, elite.get(i));
+            }
+
+            // 4) cruce y mutación SOLO desde eliteCount
+            populationCross(newPopulation, crossProbability, crossOverMethodString, rand, eliteCount);
+            mutatePopulation(newPopulation, mutationProbability, mutationMethodString, rand, eliteCount);
+
+            // 5) evaluar/normalizar
             evaluateAndNormalize(newPopulation);
 
             // stats
@@ -175,5 +200,16 @@ public class Evolution {
         }
 
         return new GAResult(this.globalBest.clone(), bestOfGen, globalBestSoFar, avgFitness);
+    }
+
+    private ArrayList<Chromosome> getElite(Population pop, int eliteCount) {
+        ArrayList<Chromosome> list = new ArrayList<>(pop.getPopulation());
+        list.sort((a, b) -> Integer.compare(b.getFitness(), a.getFitness())); // desc
+
+        ArrayList<Chromosome> elite = new ArrayList<>();
+        for (int i = 0; i < eliteCount && i < list.size(); i++) {
+            elite.add(list.get(i).clone());
+        }
+        return elite;
     }
 }
