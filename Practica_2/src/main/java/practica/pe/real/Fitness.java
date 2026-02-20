@@ -83,7 +83,7 @@ public class Fitness {
                     Pair cell = new Pair(i, j);
                     if (!seen.contains(cell)) {
                         seen.add(cell);
-                        result += map[cellX][cellY];
+                        result += map[i][j];
                     }
 
                 }
