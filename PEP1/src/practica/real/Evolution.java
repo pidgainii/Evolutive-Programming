@@ -15,13 +15,15 @@ public class Evolution {
     private final int num_cameras;
     private final int N;
     private final int M;
+    private final boolean ponderado;
 
-    public Evolution(Fitness fitness,  int population_size,  int num_cameras, int N, int M) {
+    public Evolution(Fitness fitness,  int population_size,  int num_cameras, int N, int M, boolean ponderado) {
         this.fitness = fitness;
         this.population_size = population_size;
         this.num_cameras = num_cameras;
         this.N = N;
         this.M = M;
+        this.ponderado = ponderado;
 
         globalBest = null;
     }
@@ -82,14 +84,14 @@ public class Evolution {
                 case GENE -> individual.mutateGeneLevel(rand, mutationProbability, num_cameras, N, M);
             }
 
-            individual.setFitness(fitness.evaluate(individual));
+            individual.setFitness(fitness.evaluate(individual, ponderado));
         }
     }
 
     public void evaluateAndNormalize(Population population) {
 
         for (Chromosome individual : population.getPopulation()) {
-            individual.setFitness(fitness.evaluate(individual));
+            individual.setFitness(fitness.evaluate(individual, ponderado));
         }
 
         Chromosome localBest = population.getPopulation().get(0);
@@ -155,7 +157,7 @@ public class Evolution {
             ArrayList<Chromosome> elite = getElite(population, eliteCount);
 
             // 2) crear nueva población con tamaño y seleccionar como siempre
-            Population newPopulation = new Population(fitness, this.population_size, this.num_cameras, N, M);
+            Population newPopulation = new Population(fitness, this.population_size, this.num_cameras, N, M, ponderado);
 
             SelectionMethod method = SelectionMethod.valueOf(selectionMethodString);
             Selection.select(method, population, newPopulation, population_size, rand);

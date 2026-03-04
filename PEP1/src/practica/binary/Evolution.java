@@ -13,12 +13,15 @@ public class Evolution {
     private Chromosome globalBest;
     private final int population_size;
     private final int total_bits;
+    private final boolean ponderado;
 
-    public Evolution(Fitness fitness,  int population_size,  int total_bits) {
+    public Evolution(Fitness fitness,  int population_size,  int total_bits, boolean ponderado) {
         this.fitness = fitness;
         this.population_size = population_size;
         this.total_bits = total_bits;
         globalBest = null;
+        this.ponderado = ponderado;
+        
     }
 
     public void populationCross(Population population,
@@ -77,7 +80,7 @@ public class Evolution {
     public void evaluateAndNormalize(Population population) {
 
         for (Chromosome individual : population.getPopulation()) {
-            individual.setFitness(fitness.evaluate(individual));
+            individual.setFitness(fitness.evaluate(individual, ponderado));
         }
 
         Chromosome localBest = population.getPopulation().get(0);
@@ -145,7 +148,7 @@ public class Evolution {
             ArrayList<Chromosome> elite = getElite(population, eliteCount);
 
             // 2) crear población nueva (con tamaño) y aplicar selección como siempre
-            Population newPopulation = new Population(fitness, this.population_size, this.total_bits);
+            Population newPopulation = new Population(fitness, this.population_size, this.total_bits, this.ponderado);
 
             SelectionMethod method = SelectionMethod.valueOf(selectionMethodString);
             Selection.select(method, population, newPopulation, population_size, rand);

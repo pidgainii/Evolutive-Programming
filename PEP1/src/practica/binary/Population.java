@@ -7,7 +7,7 @@ public class Population {
 
     private final ArrayList<Chromosome> population;
 
-    public Population(Fitness fitness, int size, int totalBits) {
+    public Population(Fitness fitness, int size, int totalBits, boolean ponderado) {
 
         this.population = new ArrayList<>();
         Random rand = new Random();
@@ -21,7 +21,7 @@ public class Population {
             }
 
             Chromosome newChromosome = new Chromosome(gene.toString());
-            newChromosome.setFitness(fitness.evaluate(newChromosome));
+            newChromosome.setFitness(fitness.evaluate(newChromosome, ponderado));
             this.population.add(newChromosome);
         }
     }

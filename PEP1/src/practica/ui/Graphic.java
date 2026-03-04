@@ -38,67 +38,71 @@ public class Graphic extends JFrame {
     private final XYSeries sAvg = new XYSeries("Media (verde)", false, true);
 
     private final BoardPanel boardPanel;
+    private boolean ponderado;
 
     // MAP 1
+    // El primero se usa en el modo normal
+    // El segundo se usa en el modo ponerado
     private final int[][] map1 = {
-            {1, 1, 1, 1, 1, 0, 1, 1, 1, 1},
-            {1, 0, 5, 5, 5, 1, 1, 1, 0, 1}, // Pasillo Norte
-            {1, 1, 1, 0, 1, 1, 0, 1, 1, 1},
-            {1, 1, 1, 1, 5, 5, 5, 1, 1, 1}, // Pasillo Centro
-            {0, 1, 1, 1, 0, 10, 1, 1, 1, 1}, // <--- JOYA (10)
-            {1, 1, 0, 1, 1, 5, 1, 0, 1, 1}, // Conexión
-            {1, 1, 1, 1, 1, 5, 1, 1, 1, 1}, // Conexión
-            {1, 1, 0, 1, 1, 1, 1, 1, 1, 1},
-            {1, 1, 5, 5, 5, 0, 5, 5, 5, 1}, // Pasillo Sur
-            {1, 1, 1, 1, 1, 1, 1, 0, 1, 1}
+        {1, 1, 1, 1, 1, 0, 1, 1, 1, 1},
+        {1, 0, 5, 5, 5, 1, 1, 1, 0, 1}, // Pasillo Norte
+        {1, 1, 1, 0, 1, 1, 0, 1, 1, 1},
+        {1, 1, 1, 1, 5, 5, 5, 1, 1, 1}, // Pasillo Centro
+        {0, 1, 1, 1, 0, 10, 1, 1, 1, 1}, // <--- JOYA (10)
+        {1, 1, 0, 1, 1, 5, 1, 0, 1, 1}, // Conexión
+        {1, 1, 1, 1, 1, 5, 1, 1, 1, 1}, // Conexión
+        {1, 1, 0, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 5, 5, 5, 0, 5, 5, 5, 1}, // Pasillo Sur
+        {1, 1, 1, 1, 1, 1, 1, 0, 1, 1}
     };
 
     // MAP 2
+    // TODO: Añadir tambien el mapa sin ponderacion
     private final int[][] map2 = {
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0,20, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1,20, 0},
-            {0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0},
-            {0, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1, 0},
-            {0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0},
-            {0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0},
-            {0, 1, 0, 1, 0, 0, 0,20, 0, 0, 0, 1, 0, 1, 0},
-            {0, 1, 1, 5, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 0},
-            {0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0},
-            {0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0},
-            {0,20, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0,20, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0,20, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1,20, 0},
+        {0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0},
+        {0, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1, 0},
+        {0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0},
+        {0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0},
+        {0, 1, 0, 1, 0, 0, 0,20, 0, 0, 0, 1, 0, 1, 0},
+        {0, 1, 1, 5, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 0},
+        {0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0},
+        {0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0},
+        {0,20, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0,20, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
     };
 
     // MAP 3
     private final int[][] map3 = {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 1, 1, 1, 1, 1, 5, 5, 5, 5, 5, 5, 1, 1, 1, 1, 1, 1, 1, 0}, // Entrada
-    {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-    {0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0},
-    {0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0},
-    {0, 1, 0, 0,15, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0}, // Hotspot Izq
-    {0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0},
-    {0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0},
-    {0, 1, 5, 5, 5, 5, 5, 5, 1, 1, 5, 5, 5, 5, 5, 5, 5, 1, 1, 0}, // Pasillo Central
-    {0, 1, 5, 5, 5, 5, 5, 5, 1, 1, 5, 5, 5, 5, 5, 5, 5, 1, 1, 0},
-    {0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0},
-    {0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0},
-    {0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0},
-    {0, 1, 0, 0,15, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0}, // Hotspot Izq
-    {0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0},
-    {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-    {0, 1,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20, 1, 0}, // Cajas
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-};
+	        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	        {0,1,1,1,1,1,5,5,5,5,5,5,1,1,1,1,1,1,1,0},
+	        {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
+	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
+	        {0,1,0,0,15,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
+	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
+	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
+	        {0,1,5,5,5,5,5,5,1,1,5,5,5,5,5,5,5,1,1,0},
+	        {0,1,5,5,5,5,5,5,1,1,5,5,5,5,5,5,5,1,1,0},
+	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
+	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
+	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
+	        {0,1,0,0,15,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
+	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
+	        {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+	        {0,1,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,1,0},
+	        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+    };
 
-    // MAP actual (se actualiza según cbScenario)
-    private int[][] map = map1;
+    private int[][] map = map1; // por defecto, mapa 1
 
     public Graphic() {
         super("Práctica 1 - UI mínima");
 
+        // Usamos el map[1] para dibujarlo, que es el que contiene info sobre las joyas
         boardPanel = new BoardPanel(copyMap(map));
-
+        
         cbScenario.addActionListener(e -> {
             map = switch (cbScenario.getSelectedIndex()) {
                 case 0 -> map1;
@@ -107,6 +111,10 @@ public class Graphic extends JFrame {
                 default -> map1;
             };
             boardPanel.setBoard(copyMap(map));
+        });
+        
+        cbWeighted.addActionListener(e -> {
+            ponderado = cbWeighted.isSelected();
         });
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -237,21 +245,21 @@ public class Graphic extends JFrame {
                 GAResult result;
 
                 if ("BINARY".equals(type)) {
-                    practica.binary.Fitness fitness = new practica.binary.Fitness(map, NUM_CAMARAS, RANGO, N, M);
+                    practica.binary.Fitness fitness = new practica.binary.Fitness(map, NUM_CAMARAS, RANGO, N, M, ponderado);
 
                     int xBits = Integer.toBinaryString(N - 1).length();
                     int yBits = Integer.toBinaryString(M - 1).length();
                     int totalBits = NUM_CAMARAS * (xBits + yBits);
 
-                    practica.binary.Population pop = new practica.binary.Population(fitness, popSize, totalBits);
-                    practica.binary.Evolution evo = new practica.binary.Evolution(fitness, popSize, totalBits);
+                    practica.binary.Population pop = new practica.binary.Population(fitness, popSize, totalBits, ponderado);
+                    practica.binary.Evolution evo = new practica.binary.Evolution(fitness, popSize, totalBits, ponderado);
 
                     result = evo.evolveWithListener(gens, pop, pc, pm, elit, selectionMethod, crossoverMethod, listener);
 
                 } else {
                     practica.real.Fitness fitness = new practica.real.Fitness(map, NUM_CAMARAS, RANGO, N, M, FOV);
-                    practica.real.Population pop = new practica.real.Population(fitness, popSize, NUM_CAMARAS, N, M);
-                    practica.real.Evolution evo = new practica.real.Evolution(fitness, popSize, NUM_CAMARAS, N, M);
+                    practica.real.Population pop = new practica.real.Population(fitness, popSize, NUM_CAMARAS, N, M, ponderado);
+                    practica.real.Evolution evo = new practica.real.Evolution(fitness, popSize, NUM_CAMARAS, N, M, ponderado);
 
                     result = evo.evolveWithListener(gens, pop, pc, pm, elit, selectionMethod, crossoverMethod, mutationMethod, listener);
                 }

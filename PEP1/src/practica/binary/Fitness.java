@@ -10,17 +10,19 @@ public class Fitness {
         private final int RANGO_VISION;
         private final int N;
         private final int M;
+        private final boolean ponderado;
 
-        public Fitness(int[][] map, int numCamaras, int rangoVision, int N, int M) {
+        public Fitness(int[][] map, int numCamaras, int rangoVision, int N, int M, boolean ponderado) {
             this.map = map;
             this.NUM_CAMARAS = numCamaras;
             this.RANGO_VISION = rangoVision;
             this.N = N;
             this.M = M;
+            this.ponderado = ponderado;
         }
 
 
-        public int evaluate(Chromosome individual) {
+        public int evaluate(Chromosome individual, boolean ponderado) {
 
             String genes = individual.getGenes();
             Set<String> set = new HashSet<>();
@@ -40,10 +42,12 @@ public class Fitness {
                 int x = Integer.parseInt(xBinary, 2);
                 int y = Integer.parseInt(yBinary, 2);
 
-                    if (x < 0 || y < 0 || x >= N || y >= M || map[x][y] == 0) {
+                // Las casillas que tienen el valor 0 son pared, posicion no válida
+                if (x < 0 || y < 0 || x >= N || y >= M || map[x][y] == 0) {
                     result -= 100;
                     continue;
                 }
+
 
                 String posCam = x + "," + y;
                 if (cameraPositions.contains(posCam)) {
@@ -55,7 +59,12 @@ public class Fitness {
 
                 if (!set.contains(posCam)) {
                     set.add(posCam);
-                    result += map[x][y];
+                    
+                    // Si estamos en modo ponderado, sumamos el valor que nos indica el mapa
+                    if (ponderado) result += map[x][y];
+                    
+                    // Si no estamos en modo ponderado, sumamos 1
+                    else result += 1;
                 }
 
                 int[] dx = {-1, 1, 0, 0};
@@ -79,7 +88,12 @@ public class Fitness {
                         if (map[newX][newY] != 0) {
                             if (!set.contains(pos)) {
                                 set.add(pos);
-                                result += map[newX][newY];
+                                
+                                // Si estamos en modo ponderado, sumamos el valor que hay en la casilla
+                                if (ponderado) result += map[newX][newY];
+                                
+                                // Si no estamos en modo ponderado, sumamos 1
+                                else result += 1;
                             }
                         } else {
                             break;

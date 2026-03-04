@@ -21,7 +21,7 @@ public class Fitness {
         this.FOV = FOV;
     }
 
-    public int evaluate(Chromosome individual) {
+    public int evaluate(Chromosome individual, boolean ponderado) {
 
         double[] g = individual.getGenes();
         Set<Pair> seen = new HashSet<>();
@@ -83,7 +83,12 @@ public class Fitness {
                     Pair cell = new Pair(i, j);
                     if (!seen.contains(cell)) {
                         seen.add(cell);
-                        result += map[i][j];
+                        
+                        // Si estamos en modo ponderado, añadimos el numero de la celda
+                        if (ponderado) result += map[i][j];
+                        
+                        // Si no estamos en modo ponderado, sumamos 1
+                        else result += 1;
                     }
 
                 }
