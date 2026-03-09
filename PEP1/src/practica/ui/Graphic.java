@@ -15,7 +15,7 @@ public class Graphic extends JFrame {
 
     // parámetros mínimos del enunciado
     private final JComboBox<String> cbScenario = new JComboBox<>(new String[]{"MAP 1 (10x10)", "MAP 2 (12x15)", "MAP 3 (18x20)"});
-
+    private final JComboBox<String> problemType = new JComboBox<>(new String[]{"BINARY", "REAL"});
     private final JSpinner spPop = new JSpinner(new SpinnerNumberModel(100, 2, 5000, 10));
     private final JSpinner spGen = new JSpinner(new SpinnerNumberModel(200, 1, 100000, 10));
     private final JSpinner spPc  = new JSpinner(new SpinnerNumberModel(0.60, 0.0, 1.0, 0.01));
