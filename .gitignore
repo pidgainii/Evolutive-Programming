@@ -1,1 +1,13 @@
-/.metadata/
+.metadata/
+# Eclipse project files
+.project
+.classpath
+.settings/
+# Eclipse build output
+bin/
+# Eclipse working files
+.tmp/
+.log/
+.bak/
+# Eclipse local history
+.history/

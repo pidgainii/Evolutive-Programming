@@ -1,4 +1,4 @@
-package practica.binary;
+package practica.real;
 
 import practica.enums.SelectionMethod;
 import practica.ui.EvolutionListener;
@@ -12,16 +12,20 @@ public class Evolution {
     private final Fitness fitness;
     private Chromosome globalBest;
     private final int population_size;
-    private final int total_bits;
+    private final int num_cameras;
+    private final int N;
+    private final int M;
     private final boolean ponderado;
 
-    public Evolution(Fitness fitness,  int population_size,  int total_bits, boolean ponderado) {
+    public Evolution(Fitness fitness,  int population_size,  int num_cameras, int N, int M, boolean ponderado) {
         this.fitness = fitness;
         this.population_size = population_size;
-        this.total_bits = total_bits;
-        globalBest = null;
+        this.num_cameras = num_cameras;
+        this.N = N;
+        this.M = M;
         this.ponderado = ponderado;
-        
+
+        globalBest = null;
     }
 
     public void populationCross(Population population,
@@ -46,9 +50,13 @@ public class Evolution {
             Chromosome father2 = population.getPopulation().get(idx2);
 
             CrossoverMethod cm = CrossoverMethod.valueOf(crossoverMethodString);
-            Chromosome[] children = (cm == CrossoverMethod.UNIFORM)
-                    ? father1.crossUniform(father2, rand)
-                    : father1.cross(father2, rand);
+
+            Chromosome[] children = switch (cm) {
+                case ONE_POINT -> father1.cross(father2, rand);
+                case UNIFORM -> father1.crossUniform(father2, rand);
+                case ARITHMETIC -> father1.crossArithmetic(father2, rand);
+                case BLX_ALPHA -> father1.crossBlxAlpha(father2, rand, 0.5);
+            };
 
             population.swap(idx1, children[0]);
             population.swap(idx2, children[1]);
@@ -57,23 +65,26 @@ public class Evolution {
 
     public void mutatePopulation(Population population,
                                  double mutationProbability,
+                                 String mutationMethodString,
                                  Random rand,
                                  int startIdx) {
+
+        double sigmaX = 0.5;
+        double sigmaY = 0.5;
+        double sigmaTheta = 10.0;
+
+        MutationMethod mm = MutationMethod.valueOf(mutationMethodString);
 
         for (int idx = startIdx; idx < population.getPopulation().size(); idx++) {
             Chromosome individual = population.getPopulation().get(idx);
 
-            boolean mutated = false;
-            char[] genesArray = individual.getGenes().toCharArray();
-
-            for (int i = 0; i < genesArray.length; i++) {
-                if (rand.nextDouble() < mutationProbability) {
-                    genesArray[i] = (genesArray[i] == '1') ? '0' : '1';
-                    mutated = true;
-                }
+            switch (mm) {
+                case GAUSSIAN -> individual.mutateGaussian(rand, mutationProbability, num_cameras, N, M,
+                        sigmaX, sigmaY, sigmaTheta);
+                case GENE -> individual.mutateGeneLevel(rand, mutationProbability, num_cameras, N, M);
             }
 
-            if (mutated) individual.setGenes(new String(genesArray));
+            individual.setFitness(fitness.evaluate(individual, ponderado));
         }
     }
 
@@ -94,25 +105,20 @@ public class Evolution {
             this.globalBest = localBest.clone();
         }
 
-        // Calculamos el menor fitness para poder sumar el valor absoluto de este a todos los fitness
-        // De esta forma, no hay fitness negativos
         int minFitness = Integer.MAX_VALUE;
-        int maxFitness = Integer.MIN_VALUE;
         for (Chromosome individual : population.getPopulation()) {
             minFitness = Math.min(minFitness, individual.getFitness());
-            maxFitness = Math.max(maxFitness, individual.getFitness());
         }
 
         double fitnessSum = 0.0;
         for (Chromosome individual : population.getPopulation()) {
-            double shifted = (double) (individual.getFitness() + Math.abs(minFitness)) + 1.0;
+            double shifted = (double) (individual.getFitness() - minFitness) + 1.0;
             fitnessSum += shifted;
         }
 
         double accumulated = 0.0;
         for (Chromosome individual : population.getPopulation()) {
-            double shifted = (double) (individual.getFitness() + Math.abs(minFitness)) + 1.0;
-
+            double shifted = (double) (individual.getFitness() - minFitness) + 1.0;
             double rel = shifted / fitnessSum;
             accumulated += rel;
 
@@ -129,7 +135,8 @@ public class Evolution {
                                        double mutationProbability,
                                        double elitismRate,
                                        String selectionMethodString,
-                                       String crossoverMethodString,
+                                       String crossOverMethodString,
+                                       String mutationMethodString,
                                        EvolutionListener listener) {
 
         this.globalBest = population.getPopulation().get(0).clone();
@@ -146,27 +153,28 @@ public class Evolution {
             int eliteCount = (int) Math.round(population_size * elitismRate);
             eliteCount = Math.max(0, Math.min(eliteCount, population_size));
 
-            // 1) capturar élite de la población actual (ya está evaluada/normalizada)
+            // 1) capturar élite de la población actual
             ArrayList<Chromosome> elite = getElite(population, eliteCount);
 
-            // 2) crear población nueva (con tamaño) y aplicar selección como siempre
-            Population newPopulation = new Population(fitness, this.population_size, this.total_bits, this.ponderado);
+            // 2) crear nueva población con tamaño y seleccionar como siempre
+            Population newPopulation = new Population(fitness, this.population_size, this.num_cameras, N, M, ponderado);
 
             SelectionMethod method = SelectionMethod.valueOf(selectionMethodString);
             Selection.select(method, population, newPopulation, population_size, rand);
 
-            // 3) reinsertar élite al principio (así no se pierde)
+            // 3) reinsertar élite al principio
             for (int i = 0; i < elite.size(); i++) {
                 newPopulation.swap(i, elite.get(i));
             }
 
             // 4) cruce y mutación SOLO desde eliteCount
-            populationCross(newPopulation, crossProbability, crossoverMethodString, rand, eliteCount);
-            mutatePopulation(newPopulation, mutationProbability, rand, eliteCount);
+            populationCross(newPopulation, crossProbability, crossOverMethodString, rand, eliteCount);
+            mutatePopulation(newPopulation, mutationProbability, mutationMethodString, rand, eliteCount);
 
             // 5) evaluar/normalizar
             evaluateAndNormalize(newPopulation);
 
+            // stats
             int best = Integer.MIN_VALUE;
             long sum = 0;
             Chromosome bestChr = newPopulation.getPopulation().get(0);
