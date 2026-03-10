@@ -38,22 +38,7 @@ public class Graphic extends JFrame {
 
     private final BoardPanel boardPanel;
     private boolean ponderado;
-    
-    problemType.addActionListener(e -> {
-        boolean isReal = problemType.getSelectedItem().equals("REAL");
 
-        mutMethod.removeAllItems();
-
-        if (isReal) {
-            mutMethod.addItem("GAUSSIAN");
-            mutMethod.addItem("GENE");
-        } else {
-            mutMethod.addItem("BIT");
-            mutMethod.addItem("GAUSSIAN");
-            mutMethod.addItem("GENE");
-        }
-    });
-    
 
     // MAP 1
     private final int[][] map1 = {

@@ -15,7 +15,6 @@ public class Graphic extends JFrame {
 
     // parámetros mínimos del enunciado
     private final JComboBox<String> cbScenario = new JComboBox<>(new String[]{"MAP 1 (10x10)", "MAP 2 (12x15)", "MAP 3 (18x20)"});
-
     private final JSpinner spPop = new JSpinner(new SpinnerNumberModel(100, 2, 5000, 10));
     private final JSpinner spGen = new JSpinner(new SpinnerNumberModel(200, 1, 100000, 10));
     private final JSpinner spPc  = new JSpinner(new SpinnerNumberModel(0.60, 0.0, 1.0, 0.01));
@@ -23,7 +22,7 @@ public class Graphic extends JFrame {
 
     private final JComboBox<String> selMethod = new JComboBox<>(new String[]{"ROULETTE", "TOURNAMENT", "STOCHASTIC", "TRUNCATION", "REMAINDERS"});
     private final JComboBox<String> crossMethod = new JComboBox<>(new String[]{"ONE_POINT", "UNIFORM", "ARITHMETIC", "BLX_ALPHA"});
-    private final JComboBox<String> mutMethod = new JComboBox<>(new String[]{"BIT", "GAUSSIAN", "GENE"});
+    private final JComboBox<String> mutMethod = new JComboBox<>(new String[]{"GAUSSIAN", "GENE"});
     private final JSpinner spElit = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 1.0, 0.05));
     private final JCheckBox cbWeighted = new JCheckBox("Ponderado (bonus)");
 
@@ -39,20 +38,6 @@ public class Graphic extends JFrame {
     private final BoardPanel boardPanel;
     private boolean ponderado;
     
-    problemType.addActionListener(e -> {
-        boolean isReal = problemType.getSelectedItem().equals("REAL");
-
-        mutMethod.removeAllItems();
-
-        if (isReal) {
-            mutMethod.addItem("GAUSSIAN");
-            mutMethod.addItem("GENE");
-        } else {
-            mutMethod.addItem("BIT");
-            mutMethod.addItem("GAUSSIAN");
-            mutMethod.addItem("GENE");
-        }
-    });
     
 
     // MAP 1
@@ -147,7 +132,6 @@ public class Graphic extends JFrame {
         JPanel form = new JPanel(new GridLayout(0, 4, 12, 8));
         form.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
 
-        form.add(new JLabel("Tipo:"));        form.add(problemType);
         form.add(new JLabel("Escenario:"));   form.add(cbScenario);
 
         form.add(new JLabel("Población:"));   form.add(spPop);
@@ -221,7 +205,6 @@ public class Graphic extends JFrame {
         double pm = (Double) spPm.getValue();
         double elit = (Double) spElit.getValue();
 
-        String type = (String) problemType.getSelectedItem();
         String selectionMethod = (String) selMethod.getSelectedItem();
         String crossoverMethod = (String) crossMethod.getSelectedItem();
         String mutationMethod = (String) mutMethod.getSelectedItem();
@@ -246,9 +229,7 @@ public class Graphic extends JFrame {
             sAvg.addOrUpdate(gen, avg);
             lblBest.setText("Best: " + bestEver);
 
-            int[][] board = "BINARY".equals(type)
-                    ? renderBoardBinary(map, (practica.binary.Chromosome) bestChrObj, RANGO)
-                    : renderBoardReal(map, (practica.real.Chromosome) bestChrObj, RANGO, FOV);
+            int[][] board = renderBoardReal(map, (practica.real.Chromosome) bestChrObj, RANGO, FOV);
 
             boardPanel.setBoard(board);
         });
@@ -257,26 +238,12 @@ public class Graphic extends JFrame {
             try {
                 GAResult result;
 
-                if ("BINARY".equals(type)) {
-                    practica.binary.Fitness fitness = new practica.binary.Fitness(map, NUM_CAMARAS, RANGO, N, M, ponderado);
+                practica.real.Fitness fitness = new practica.real.Fitness(map, NUM_CAMARAS, RANGO, N, M, FOV);
+                practica.real.Population pop = new practica.real.Population(fitness, popSize, NUM_CAMARAS, N, M, ponderado);
+                practica.real.Evolution evo = new practica.real.Evolution(fitness, popSize, NUM_CAMARAS, N, M, ponderado);
 
-                    int xBits = Integer.toBinaryString(N - 1).length();
-                    int yBits = Integer.toBinaryString(M - 1).length();
-                    int totalBits = NUM_CAMARAS * (xBits + yBits);
-
-                    practica.binary.Population pop = new practica.binary.Population(fitness, popSize, totalBits, ponderado);
-                    practica.binary.Evolution evo = new practica.binary.Evolution(fitness, popSize, totalBits, ponderado);
-
-                    result = evo.evolveWithListener(gens, pop, pc, pm, elit, selectionMethod, crossoverMethod, listener);
-
-                } else {
-                    practica.real.Fitness fitness = new practica.real.Fitness(map, NUM_CAMARAS, RANGO, N, M, FOV);
-                    practica.real.Population pop = new practica.real.Population(fitness, popSize, NUM_CAMARAS, N, M, ponderado);
-                    practica.real.Evolution evo = new practica.real.Evolution(fitness, popSize, NUM_CAMARAS, N, M, ponderado);
-
-                    
-                    result = evo.evolveWithListener(gens, pop, pc, pm, elit, selectionMethod, crossoverMethod, mutationMethod, listener);
-                }
+                
+                result = evo.evolveWithListener(gens, pop, pc, pm, elit, selectionMethod, crossoverMethod, mutationMethod, listener);
 
                 Object bestObj = result.getBest();
 
@@ -284,15 +251,9 @@ public class Graphic extends JFrame {
                     btnRun.setEnabled(true);
                     cbScenario.setEnabled(true);
 
-                    if ("BINARY".equals(type)) {
-                        practica.binary.Chromosome best = (practica.binary.Chromosome) bestObj;
-                        txt.append("Best fitness: " + best.getFitness() + "\n");
-                        txt.append("Best genes: " + best.getGenes() + "\n");
-                    } else {
-                        practica.real.Chromosome best = (practica.real.Chromosome) bestObj;
-                        txt.append("Best fitness: " + best.getFitness() + "\n");
-                        txt.append("Best genes: " + Arrays.toString(best.getGenes()) + "\n");
-                    }
+                    practica.real.Chromosome best = (practica.real.Chromosome) bestObj;
+                    txt.append("Best fitness: " + best.getFitness() + "\n");
+                    txt.append("Best genes: " + Arrays.toString(best.getGenes()) + "\n");
                 });
 
             } catch (Exception ex) {
@@ -387,64 +348,4 @@ public class Graphic extends JFrame {
         return out;
     }
 
-    private static int[][] renderBoardBinary(int[][] map,
-                                             practica.binary.Chromosome chr,
-                                             int range) {
-        int N = map.length, M = map[0].length;
-        int[][] out = copyMap(map);
-
-        String genes = chr.getGenes();
-
-        int xBits = Integer.toBinaryString(N - 1).length();
-        int yBits = Integer.toBinaryString(M - 1).length();
-        int stride = xBits + yBits;
-        int numCams = genes.length() / stride;
-
-        boolean[][] camAt = new boolean[N][M];
-        int[][] cams = new int[numCams][2];
-        int camCount = 0;
-
-        for (int cam = 0; cam < numCams; cam++) {
-            int start = cam * stride;
-            int x = Integer.parseInt(genes.substring(start, start + xBits), 2);
-            int y = Integer.parseInt(genes.substring(start + xBits, start + stride), 2);
-
-            // ANTES: map[x][y] == 0 era libre
-            // AHORA: map[x][y] != 0 es transitable/valiosa
-            if (x >= 0 && x < N && y >= 0 && y < M && map[x][y] != 0 && !camAt[x][y]) {
-                camAt[x][y] = true;
-                cams[camCount][0] = x;
-                cams[camCount][1] = y;
-                camCount++;
-                out[x][y] = 2; // cámara
-            }
-        }
-
-        int[] dx = {-1, 1, 0, 0};
-        int[] dy = {0, 0, -1, 1};
-
-        for (int i = 0; i < camCount; i++) {
-            int x = cams[i][0];
-            int y = cams[i][1];
-
-            for (int dir = 0; dir < 4; dir++) {
-                for (int r = 1; r <= range; r++) {
-                    int nx = x + dx[dir] * r;
-                    int ny = y + dy[dir] * r;
-
-                    if (nx < 0 || nx >= N || ny < 0 || ny >= M) break;
-                    if (camAt[nx][ny]) break;
-
-                    // ANTES: muro era 1
-                    // AHORA: muro es 0
-                    if (map[nx][ny] == 0) break;
-
-                    // marca como iluminada si es una celda normal (no sobrescribas cámaras)
-                    if (out[nx][ny] != 2) out[nx][ny] = 3;
-                }
-            }
-        }
-
-        return out;
-    }
 }
