@@ -11,6 +11,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Arrays;
 
+import practica.real.Pair;
+import practica.real.Board;
+
 public class Graphic extends JFrame {
 
     // parámetros mínimos del enunciado
@@ -24,6 +27,9 @@ public class Graphic extends JFrame {
     private final JComboBox<String> crossMethod = new JComboBox<>(new String[]{"ONE_POINT", "UNIFORM", "ARITHMETIC", "BLX_ALPHA"});
     private final JComboBox<String> mutMethod = new JComboBox<>(new String[]{"GAUSSIAN", "GENE"});
     private final JSpinner spElit = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 1.0, 0.05));
+    private final JSpinner spSeed = new JSpinner(
+            new SpinnerNumberModel(3000, 0, Integer.MAX_VALUE, 1)
+    );
     private final JCheckBox cbWeighted = new JCheckBox("Ponderado (bonus)");
 
     private final JButton btnRun = new JButton("Run");
@@ -94,12 +100,18 @@ public class Graphic extends JFrame {
     };
 
     private int[][] map = map1; // por defecto, mapa 1
+    int seed = (Integer) spSeed.getValue();
+    int N = map.length, M = map[0].length;
+    Board board = new Board(map, seed, 10, N, M);
 
     public Graphic() {
         super("Práctica 1 - UI mínima");
 
         // Usamos el map[1] para dibujarlo, que es el que contiene info sobre las joyas
-        boardPanel = new BoardPanel(copyMap(map));
+        int seed = (Integer) spSeed.getValue();
+        int N = map.length, M = map[0].length;
+        Board board = new Board(map, seed, 10, N, M);
+        boardPanel = new BoardPanel(board);
         
         cbScenario.addActionListener(e -> {
             map = switch (cbScenario.getSelectedIndex()) {
@@ -108,7 +120,7 @@ public class Graphic extends JFrame {
                 case 2 -> map3;
                 default -> map1;
             };
-            boardPanel.setBoard(copyMap(map));
+            boardPanel.setBoard(board.copy());
         });
         
         cbWeighted.addActionListener(e -> {
@@ -145,6 +157,7 @@ public class Graphic extends JFrame {
 
         form.add(new JLabel("Mutación:"));    form.add(mutMethod);
         form.add(new JLabel("Elitismo:"));    form.add(spElit);
+        form.add(new JLabel("Semilla:"));     form.add(spSeed);
 
         form.add(new JLabel(""));            form.add(cbWeighted);
         form.add(new JLabel(""));            form.add(new JLabel(""));
@@ -204,6 +217,7 @@ public class Graphic extends JFrame {
         double pc = (Double) spPc.getValue();
         double pm = (Double) spPm.getValue();
         double elit = (Double) spElit.getValue();
+        int seed = (Integer) spSeed.getValue();
 
         String selectionMethod = (String) selMethod.getSelectedItem();
         String crossoverMethod = (String) crossMethod.getSelectedItem();
@@ -229,7 +243,8 @@ public class Graphic extends JFrame {
             sAvg.addOrUpdate(gen, avg);
             lblBest.setText("Best: " + bestEver);
 
-            int[][] board = renderBoardReal(map, (practica.real.Chromosome) bestChrObj, RANGO, FOV);
+            int[][] mapa = renderBoardReal(board, (practica.real.Chromosome) bestChrObj, RANGO, FOV);
+            Board board = new Board(mapa, seed, NUM_CAMARAS, N, M);
 
             boardPanel.setBoard(board);
         });
@@ -241,6 +256,8 @@ public class Graphic extends JFrame {
                 practica.real.Fitness fitness = new practica.real.Fitness(map, NUM_CAMARAS, RANGO, N, M, FOV);
                 practica.real.Population pop = new practica.real.Population(fitness, popSize, NUM_CAMARAS, N, M, ponderado);
                 practica.real.Evolution evo = new practica.real.Evolution(fitness, popSize, NUM_CAMARAS, N, M, ponderado);
+                
+                practica.real.Board board = new practica.real.Board(map, seed, NUM_CAMARAS, N, M);
 
                 
                 result = evo.evolveWithListener(gens, pop, pc, pm, elit, selectionMethod, crossoverMethod, mutationMethod, listener);
@@ -267,20 +284,14 @@ public class Graphic extends JFrame {
         }).start();
     }
 
-    private static int[][] copyMap(int[][] map) {
-        int[][] out = new int[map.length][map[0].length];
-        for (int i = 0; i < map.length; i++) {
-            System.arraycopy(map[i], 0, out[i], 0, map[0].length);
-        }
-        return out;
-    }
 
-    private static int[][] renderBoardReal(int[][] map,
-                                           practica.real.Chromosome chr,
-                                           int range,
-                                           double fovDeg) {
-        int N = map.length, M = map[0].length;
-        int[][] out = copyMap(map);
+    private static int[][] renderBoardReal(Board board, practica.real.Chromosome chr, int range, double fovDeg) {
+        // Make a copy of the board to avoid modifying the original
+        Board outBoard = board.copy();
+        int[][] out = outBoard.getMap();
+
+        int N = out.length;
+        int M = out[0].length;
 
         double[] g = chr.getGenes();
         int numCams = g.length / 3;
@@ -291,8 +302,8 @@ public class Graphic extends JFrame {
             int x = (int) Math.floor(g[base]);
             int y = (int) Math.floor(g[base + 1]);
 
-            if (x >= 0 && x < N && y >= 0 && y < M && map[x][y] != 0) {
-                out[x][y] = 2;
+            if (x >= 0 && x < N && y >= 0 && y < M && out[x][y] != 0) {
+                out[x][y] = 2; // marca cámara
             }
         }
 
@@ -307,10 +318,7 @@ public class Graphic extends JFrame {
             int startCellY = (int) Math.floor(cy);
 
             if (startCellX < 0 || startCellX >= N || startCellY < 0 || startCellY >= M) continue;
-
-            // ANTES: muro == 1
-            // AHORA: muro == 0
-            if (map[startCellX][startCellY] == 0) continue;
+            if (out[startCellX][startCellY] == 0) continue; // muro
 
             double startAng = theta - fovDeg / 2.0;
             double step = (rays <= 1) ? 0.0 : (fovDeg / (rays - 1));
@@ -338,14 +346,14 @@ public class Graphic extends JFrame {
                     if (dist > range) break;
 
                     // muro corta
-                    if (map[ix][iy] == 0) break;
+                    if (out[ix][iy] == 0) break;
 
-                    if (out[ix][iy] != 2) out[ix][iy] = 3;
+                    if (out[ix][iy] != 2) out[ix][iy] = 3; // iluminado
                 }
             }
         }
 
-        return out;
+        return outBoard.getMap();
     }
 
 }
