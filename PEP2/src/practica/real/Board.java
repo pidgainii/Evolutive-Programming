@@ -21,12 +21,12 @@ public class Board {
 	// Este set nos servira para saber si hay camara en cierta posicion en tiempo cte.
 	private Set<Pair> setPosicionesCamaras;
 	
-	public Board(int[][] map, int seed, int numCamaras, int N, int M) {
+	public Board(int[][] map, int seed, int numCamaras) {
 		this.map = map;
 		this.seed = seed;
 		this.NUM_CAMARAS = numCamaras;
-		this.N = N;
-		this.M = M;
+		this.N = map.length;
+		this.M = map[0].length;
 		
 		this.setPosicionesCamaras = new HashSet<Pair>();
 		this.posicionesCamaras = new ArrayList<Pair>();
@@ -55,6 +55,14 @@ public class Board {
 		return this.map;
 	}
 	
+	public int N() {
+		return this.N;
+	}
+	
+	public int M() {
+		return this.M;
+	}
+	
 	public ArrayList<Pair> getCamaras() {
 		return this.posicionesCamaras;
 	}
@@ -67,7 +75,7 @@ public class Board {
 	        System.arraycopy(this.map[i], 0, newMap[i], 0, M);
 	    }
 
-	    Board copy = new Board(newMap, this.seed, this.NUM_CAMARAS, this.N, this.M);
+	    Board copy = new Board(newMap, this.seed, this.NUM_CAMARAS);
 
 	    // copiar cámaras
 	    copy.posicionesCamaras = new ArrayList<>();

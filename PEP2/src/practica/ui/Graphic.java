@@ -42,68 +42,14 @@ public class Graphic extends JFrame {
     private final XYSeries sAvg = new XYSeries("Media (verde)", false, true);
 
     private final BoardPanel boardPanel;
-    private boolean ponderado;
+
+
+    private Board board = new Board(map1, (Integer)spSeed.getValue(), 10, map1.length, map1[0].length);
+
     
     
-
-    // MAP 1
-    private final int[][] map1 = {
-        {1, 1, 1, 1, 1, 0, 1, 1, 1, 1},
-        {1, 0, 5, 5, 5, 1, 1, 1, 0, 1}, // Pasillo Norte
-        {1, 1, 1, 0, 1, 1, 0, 1, 1, 1},
-        {1, 1, 1, 1, 5, 5, 5, 1, 1, 1}, // Pasillo Centro
-        {0, 1, 1, 1, 0, 10, 1, 1, 1, 1}, // <--- JOYA (10)
-        {1, 1, 0, 1, 1, 5, 1, 0, 1, 1}, // Conexión
-        {1, 1, 1, 1, 1, 5, 1, 1, 1, 1}, // Conexión
-        {1, 1, 0, 1, 1, 1, 1, 1, 1, 1},
-        {1, 1, 5, 5, 5, 0, 5, 5, 5, 1}, // Pasillo Sur
-        {1, 1, 1, 1, 1, 1, 1, 0, 1, 1}
-    };
-
-    // MAP 2
-    // TODO: Añadir tambien el mapa sin ponderacion
-    private final int[][] map2 = {
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0,20, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1,20, 0},
-        {0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0},
-        {0, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1, 0},
-        {0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0},
-        {0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0},
-        {0, 1, 0, 1, 0, 0, 0,20, 0, 0, 0, 1, 0, 1, 0},
-        {0, 1, 1, 5, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 0},
-        {0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0},
-        {0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0},
-        {0,20, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0,20, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-    };
-
-    // MAP 3
-    private final int[][] map3 = {
-	        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-	        {0,1,1,1,1,1,5,5,5,5,5,5,1,1,1,1,1,1,1,0},
-	        {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
-	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
-	        {0,1,0,0,15,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
-	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
-	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
-	        {0,1,5,5,5,5,5,5,1,1,5,5,5,5,5,5,5,1,1,0},
-	        {0,1,5,5,5,5,5,5,1,1,5,5,5,5,5,5,5,1,1,0},
-	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
-	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
-	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
-	        {0,1,0,0,15,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
-	        {0,1,0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,1,0},
-	        {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-	        {0,1,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,1,0},
-	        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-    };
-
-    private int[][] map = map1; // por defecto, mapa 1
-    int seed = (Integer) spSeed.getValue();
-    int N = map.length, M = map[0].length;
-    Board board = new Board(map, seed, 10, N, M);
-
+    
+    
     public Graphic() {
         super("Práctica 1 - UI mínima");
 
@@ -204,6 +150,7 @@ public class Graphic extends JFrame {
         return right;
     }
 
+    
     private void run() {
         btnRun.setEnabled(false);
         cbScenario.setEnabled(false);
@@ -246,6 +193,7 @@ public class Graphic extends JFrame {
             int[][] mapa = renderBoardReal(board, (practica.real.Chromosome) bestChrObj, RANGO, FOV);
             Board board = new Board(mapa, seed, NUM_CAMARAS, N, M);
 
+            // ESTA ES LA LLAMADA CLAVE
             boardPanel.setBoard(board);
         });
 
