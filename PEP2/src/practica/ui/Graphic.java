@@ -12,16 +12,23 @@ import java.awt.*;
 import java.util.Arrays;
 
 import practica.real.Pair;
+import practica.GARunner;
+import practica.Maps;
 import practica.real.Board;
 
-public class Graphic extends JFrame {
 
-    // parámetros mínimos del enunciado
-    private final JComboBox<String> cbScenario = new JComboBox<>(new String[]{"MAP 1 (10x10)", "MAP 2 (12x15)", "MAP 3 (18x20)"});
+
+
+public class Graphic extends JFrame {
+	
+	// ELEMENTOS VISUALES
+	private final JComboBox<String> cbScenario = new JComboBox<>(new String[]{"MAP 1 (10x10)", "MAP 2 (12x15)", "MAP 3 (18x20)"});
     private final JSpinner spPop = new JSpinner(new SpinnerNumberModel(100, 2, 5000, 10));
     private final JSpinner spGen = new JSpinner(new SpinnerNumberModel(200, 1, 100000, 10));
     private final JSpinner spPc  = new JSpinner(new SpinnerNumberModel(0.60, 0.0, 1.0, 0.01));
     private final JSpinner spPm  = new JSpinner(new SpinnerNumberModel(0.05, 0.0, 1.0, 0.001));
+    private final JSpinner spNCam  = new JSpinner(new SpinnerNumberModel(40, 0, 50, 1));
+    private final JSpinner spNDrones  = new JSpinner(new SpinnerNumberModel(3, 0, 5, 1));
 
     private final JComboBox<String> selMethod = new JComboBox<>(new String[]{"ROULETTE", "TOURNAMENT", "STOCHASTIC", "TRUNCATION", "REMAINDERS"});
     private final JComboBox<String> crossMethod = new JComboBox<>(new String[]{"ONE_POINT", "UNIFORM", "ARITHMETIC", "BLX_ALPHA"});
@@ -30,7 +37,6 @@ public class Graphic extends JFrame {
     private final JSpinner spSeed = new JSpinner(
             new SpinnerNumberModel(3000, 0, Integer.MAX_VALUE, 1)
     );
-    private final JCheckBox cbWeighted = new JCheckBox("Ponderado (bonus)");
 
     private final JButton btnRun = new JButton("Run");
     private final JLabel lblBest = new JLabel("Best: -");
@@ -40,149 +46,94 @@ public class Graphic extends JFrame {
     private final XYSeries sBestGen = new XYSeries("Mejor gen (rojo)", false, true);
     private final XYSeries sBestEver = new XYSeries("Mejor histórico (azul)", false, true);
     private final XYSeries sAvg = new XYSeries("Media (verde)", false, true);
+	
+    
+    // BoardPanel renders the board
+    private BoardPanel boardPanel;
+    
+	// board contiene el mapa y las camaras
+	private Board board;
 
-    private final BoardPanel boardPanel;
-
-
-    private Board board = new Board(map1, (Integer)spSeed.getValue(), 10, map1.length, map1[0].length);
-
+	// En el constructor, se añade un listener para que esta variable cambie de valor
+	// cuando se haga click en el elemento visual
+	private boolean ponderado;
+	
+	private int[][] map;
     
     
+	
+	
     
-    
+    // CONSTRUCTOR
     public Graphic() {
-        super("Práctica 1 - UI mínima");
+    	super("Práctica 2");
 
-        // Usamos el map[1] para dibujarlo, que es el que contiene info sobre las joyas
         int seed = (Integer) spSeed.getValue();
-        int N = map.length, M = map[0].length;
-        Board board = new Board(map, seed, 10, N, M);
+        int num_camaras = (Integer) spNCam.getValue();
+
+        board = new Board(Maps.MAP1, seed, num_camaras);
         boardPanel = new BoardPanel(board);
-        
-        cbScenario.addActionListener(e -> {
-            map = switch (cbScenario.getSelectedIndex()) {
-                case 0 -> map1;
-                case 1 -> map2;
-                case 2 -> map3;
-                default -> map1;
-            };
-            boardPanel.setBoard(board.copy());
-        });
-        
-        cbWeighted.addActionListener(e -> {
-            ponderado = cbWeighted.isSelected();
-        });
+
+        cbScenario.addActionListener(e -> changeScenario());
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(10,10));
 
-        add(buildTopPanel(), BorderLayout.NORTH);
-        add(buildCenterChart(), BorderLayout.CENTER);
-        add(buildRightPanel(), BorderLayout.EAST);
+        add(buildLeftPanel(), BorderLayout.WEST);
+        add(buildRightMainPanel(), BorderLayout.CENTER);
 
         btnRun.addActionListener(e -> run());
 
-        setSize(1050, 650);
+        setSize(800,800);
         setLocationRelativeTo(null);
     }
-
-    private JPanel buildTopPanel() {
-        JPanel form = new JPanel(new GridLayout(0, 4, 12, 8));
-        form.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
-
-        form.add(new JLabel("Escenario:"));   form.add(cbScenario);
-
-        form.add(new JLabel("Población:"));   form.add(spPop);
-        form.add(new JLabel("Generaciones:"));form.add(spGen);
-
-        form.add(new JLabel("Pc:"));          form.add(spPc);
-        form.add(new JLabel("Pm:"));          form.add(spPm);
-
-        form.add(new JLabel("Selección:"));   form.add(selMethod);
-        form.add(new JLabel("Cruce:"));       form.add(crossMethod);
-
-        form.add(new JLabel("Mutación:"));    form.add(mutMethod);
-        form.add(new JLabel("Elitismo:"));    form.add(spElit);
-        form.add(new JLabel("Semilla:"));     form.add(spSeed);
-
-        form.add(new JLabel(""));            form.add(cbWeighted);
-        form.add(new JLabel(""));            form.add(new JLabel(""));
-
-        JPanel top = new JPanel(new BorderLayout());
-        top.add(form, BorderLayout.CENTER);
-
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        actions.setBorder(BorderFactory.createEmptyBorder(0, 10, 8, 10));
-        actions.add(btnRun);
-        actions.add(lblBest);
-        top.add(actions, BorderLayout.SOUTH);
-
-        return top;
-    }
-
-    private ChartPanel buildCenterChart() {
-        XYSeriesCollection dataset = new XYSeriesCollection();
-        dataset.addSeries(sBestGen);
-        dataset.addSeries(sBestEver);
-        dataset.addSeries(sAvg);
-
-        JFreeChart chart = ChartFactory.createXYLineChart(
-                "Evolución",
-                "Generación",
-                "Fitness",
-                dataset,
-                PlotOrientation.VERTICAL,
-                true, true, false
-        );
-
-        return new ChartPanel(chart);
-    }
-
-    private JPanel buildRightPanel() {
-        JPanel right = new JPanel(new BorderLayout(5, 5));
-        right.setPreferredSize(new Dimension(360, 600));
-
-        txt.setEditable(false);
-        txt.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-
-        right.add(new JScrollPane(txt), BorderLayout.NORTH);
-        right.add(boardPanel, BorderLayout.CENTER);
-        return right;
-    }
-
     
+    // FUNCION PARA CAMBIAR DE ESCENARIO Y ACTUALIZAR MAP
+    // this.board cogerá this.map cuando se llame al metodo run
+    private void changeScenario() {
+        this.map = switch (cbScenario.getSelectedIndex()) {
+            case 0 -> Maps.MAP1;
+            case 1 -> Maps.MAP2;
+            case 2 -> Maps.MAP3;
+            default -> Maps.MAP1;
+        };
+        
+        int seed = (Integer) spSeed.getValue();
+        int num_camaras = (Integer) spNCam.getValue();
+        this.board = new Board(this.map, seed, num_camaras);
+        this.boardPanel.setBoard(this.board);
+    }
+    
+    
+    // METODO RUN
     private void run() {
-        btnRun.setEnabled(false);
-        cbScenario.setEnabled(false);
+    	btnRun.setEnabled(false);
+    	cbScenario.setEnabled(false);
         txt.setText("");
         lblBest.setText("Best: ejecutando...");
 
         sBestGen.clear(); sBestEver.clear(); sAvg.clear();
-
+        
         int popSize = (Integer) spPop.getValue();
         int gens = (Integer) spGen.getValue();
         double pc = (Double) spPc.getValue();
         double pm = (Double) spPm.getValue();
         double elit = (Double) spElit.getValue();
         int seed = (Integer) spSeed.getValue();
+        int num_camaras = (Integer) spNCam.getValue();
 
         String selectionMethod = (String) selMethod.getSelectedItem();
         String crossoverMethod = (String) crossMethod.getSelectedItem();
         String mutationMethod = (String) mutMethod.getSelectedItem();
-
-        int NUM_CAMARAS;
-        int RANGO;
-        double FOV;
-
-        switch (cbScenario.getSelectedIndex()) {
-            case 0 -> { NUM_CAMARAS = 4; RANGO = 3; FOV = 60.0; }
-            case 1 -> { NUM_CAMARAS = 7; RANGO = 5; FOV = 90.0; }
-            case 2 -> { NUM_CAMARAS = 8; RANGO = 7; FOV = 70.0; }
-            default -> { NUM_CAMARAS = 4; RANGO = 3; FOV = 60.0; }
-        }
-
-        int N = map.length, M = map[0].length;
-
+        
+        
+        // Creamos un nuevo board con el numero de camaras y semilla indicados en la UI (y mapa actualizado)
+        this.board = new Board(this.map, seed, num_camaras);
+        boardPanel.setBoard(this.board);
+        
+        
+        // Ahora tenemos que crear un listener para que la evolución vaya llamandole
+        // y así se actualice la GUI (boardPanel)
         EvolutionListener listener = (gen, bestGen, bestEver, avg, bestChrObj) -> SwingUtilities.invokeLater(() -> {
             // IMPORTANT: addOrUpdate avoids SeriesException when X repeats
             sBestGen.addOrUpdate(gen, bestGen);
@@ -190,26 +141,23 @@ public class Graphic extends JFrame {
             sAvg.addOrUpdate(gen, avg);
             lblBest.setText("Best: " + bestEver);
 
-            int[][] mapa = renderBoardReal(board, (practica.real.Chromosome) bestChrObj, RANGO, FOV);
-            Board board = new Board(mapa, seed, NUM_CAMARAS, N, M);
 
-            // ESTA ES LA LLAMADA CLAVE
-            boardPanel.setBoard(board);
+            // Que hay que dibujar del mapa?
+            // De momento nada, ahora las camaras estan fijas
+            // Mas adelante habrá que dibujar los cromosomas (rutas por las que van los drones)
+            
+            // ESTA ES LA LLAMADA CLAVE. Esto hace que se actualice el panel
+            // Mas adelante, boardPanel dibujará también el cromosoma en el mapa (rutas)
+            boardPanel.setBoard(this.board);
         });
-
+        
+        
         new Thread(() -> {
             try {
-                GAResult result;
 
-                practica.real.Fitness fitness = new practica.real.Fitness(map, NUM_CAMARAS, RANGO, N, M, FOV);
-                practica.real.Population pop = new practica.real.Population(fitness, popSize, NUM_CAMARAS, N, M, ponderado);
-                practica.real.Evolution evo = new practica.real.Evolution(fitness, popSize, NUM_CAMARAS, N, M, ponderado);
-                
-                practica.real.Board board = new practica.real.Board(map, seed, NUM_CAMARAS, N, M);
-
-                
-                result = evo.evolveWithListener(gens, pop, pc, pm, elit, selectionMethod, crossoverMethod, mutationMethod, listener);
-
+                GAResult result = GARunner.run(board, popSize, gens, pc, pm, elit, selectionMethod, crossoverMethod, mutationMethod, listener);
+                		
+                		
                 Object bestObj = result.getBest();
 
                 SwingUtilities.invokeLater(() -> {
@@ -230,78 +178,163 @@ public class Graphic extends JFrame {
                 });
             }
         }).start();
+        
+        
+        
+    }
+    
+    
+    
+    
+    
+    
+    // LEFT PANEL (VERTICAL PARAMETERS)
+    private JPanel buildLeftPanel() {
+
+        JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+        container.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+        container.setPreferredSize(new Dimension(280,500));
+
+        container.add(buildTopPanel());
+
+        JPanel actions = new JPanel(new FlowLayout());
+        actions.add(btnRun);
+        actions.add(lblBest);
+
+        container.add(Box.createVerticalStrut(10));
+        container.add(actions);
+
+        return container;
     }
 
+    // PARAMETERS PANEL
+    private JPanel buildTopPanel() {
 
-    private static int[][] renderBoardReal(Board board, practica.real.Chromosome chr, int range, double fovDeg) {
-        // Make a copy of the board to avoid modifying the original
-        Board outBoard = board.copy();
-        int[][] out = outBoard.getMap();
+        JPanel left = new JPanel(new GridLayout(0,2,8,6));
+        left.setBorder(BorderFactory.createTitledBorder("GA Parameters"));
 
-        int N = out.length;
-        int M = out[0].length;
+        left.add(new JLabel("Escenario:"));
+        left.add(cbScenario);
 
-        double[] g = chr.getGenes();
-        int numCams = g.length / 3;
+        left.add(new JLabel("Población:"));
+        left.add(spPop);
 
-        // coloca cámaras: SOLO en celdas transitables (valor > 0)
-        for (int cam = 0; cam < numCams; cam++) {
-            int base = cam * 3;
-            int x = (int) Math.floor(g[base]);
-            int y = (int) Math.floor(g[base + 1]);
+        left.add(new JLabel("Generaciones:"));
+        left.add(spGen);
 
-            if (x >= 0 && x < N && y >= 0 && y < M && out[x][y] != 0) {
-                out[x][y] = 2; // marca cámara
-            }
-        }
+        left.add(new JLabel("Pc:"));
+        left.add(spPc);
 
-        int rays = Math.max(5, (int) Math.round(fovDeg));
-        for (int cam = 0; cam < numCams; cam++) {
-            int base = cam * 3;
-            double cx = g[base];
-            double cy = g[base + 1];
-            double theta = g[base + 2];
+        left.add(new JLabel("Pm:"));
+        left.add(spPm);
 
-            int startCellX = (int) Math.floor(cx);
-            int startCellY = (int) Math.floor(cy);
+        left.add(new JLabel("Elitismo:"));
+        left.add(spElit);
 
-            if (startCellX < 0 || startCellX >= N || startCellY < 0 || startCellY >= M) continue;
-            if (out[startCellX][startCellY] == 0) continue; // muro
+        JPanel mid = new JPanel(new GridLayout(0,2,8,6));
+        mid.setBorder(BorderFactory.createTitledBorder("Problem"));
 
-            double startAng = theta - fovDeg / 2.0;
-            double step = (rays <= 1) ? 0.0 : (fovDeg / (rays - 1));
+        mid.add(new JLabel("Número de cámaras:"));
+        mid.add(spNCam);
 
-            for (int ri = 0; ri < rays; ri++) {
-                double angDeg = startAng + ri * step;
-                double ang = Math.toRadians(angDeg);
+        mid.add(new JLabel("Número de drones:"));
+        mid.add(spNDrones);
 
-                double dx = Math.cos(ang);
-                double dy = Math.sin(ang);
+        mid.add(new JLabel("Semilla:"));
+        mid.add(spSeed);
 
-                double x = cx + 0.5;
-                double y = cy + 0.5;
+        JPanel right = new JPanel(new GridLayout(0,2,8,6));
+        right.setBorder(BorderFactory.createTitledBorder("Operators"));
 
-                for (int s = 0; s < range * 10; s++) {
-                    x += dx * 0.1;
-                    y += dy * 0.1;
+        right.add(new JLabel("Selección:"));
+        right.add(selMethod);
 
-                    int ix = (int) Math.floor(x);
-                    int iy = (int) Math.floor(y);
+        right.add(new JLabel("Cruce:"));
+        right.add(crossMethod);
 
-                    if (ix < 0 || ix >= N || iy < 0 || iy >= M) break;
+        right.add(new JLabel("Mutación:"));
+        right.add(mutMethod);
 
-                    double dist = Math.hypot(x - (cx + 0.5), y - (cy + 0.5));
-                    if (dist > range) break;
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-                    // muro corta
-                    if (out[ix][iy] == 0) break;
+        panel.add(left);
+        panel.add(mid);
+        panel.add(right);
 
-                    if (out[ix][iy] != 2) out[ix][iy] = 3; // iluminado
-                }
-            }
-        }
-
-        return outBoard.getMap();
+        return panel;
     }
 
+    // RIGHT SIDE LAYOUT
+    private JPanel buildRightMainPanel() {
+
+        JPanel main = new JPanel(new BorderLayout(10,10));
+        main.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+
+        // Chart (top)
+        ChartPanel chart = buildCenterChart();
+        chart.setPreferredSize(new Dimension(500,400));
+        chart.setBorder(BorderFactory.createTitledBorder("Evolution"));
+
+        // Log (middle small)
+        txt.setEditable(false);
+        txt.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+
+        JScrollPane log = new JScrollPane(txt);
+        log.setPreferredSize(new Dimension(500,50));
+        log.setBorder(BorderFactory.createTitledBorder("Execution Log"));
+
+        // Board (bottom big square)
+        JPanel boardContainer = new JPanel(new BorderLayout());
+        boardContainer.setBorder(BorderFactory.createTitledBorder("Board"));
+        boardContainer.add(boardPanel);
+        boardContainer.setPreferredSize(new Dimension(500,400));
+
+        JPanel centerStack = new JPanel();
+        centerStack.setLayout(new BoxLayout(centerStack, BoxLayout.Y_AXIS));
+
+        centerStack.add(chart);
+        centerStack.add(Box.createVerticalStrut(8));
+        centerStack.add(log);
+        centerStack.add(Box.createVerticalStrut(8));
+        centerStack.add(boardContainer);
+
+        main.add(centerStack, BorderLayout.CENTER);
+
+        return main;
+    }
+
+    private ChartPanel buildCenterChart() {
+
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        dataset.addSeries(sBestGen);
+        dataset.addSeries(sBestEver);
+        dataset.addSeries(sAvg);
+
+        JFreeChart chart = ChartFactory.createXYLineChart(
+                "Evolución",
+                "Generación",
+                "Fitness",
+                dataset,
+                PlotOrientation.VERTICAL,
+                true, true, false
+        );
+
+        return new ChartPanel(chart);
+    }
+   
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 }

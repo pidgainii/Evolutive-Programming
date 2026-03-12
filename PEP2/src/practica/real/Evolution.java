@@ -12,18 +12,12 @@ public class Evolution {
     private final Fitness fitness;
     private Chromosome globalBest;
     private final int population_size;
-    private final int num_cameras;
-    private final int N;
-    private final int M;
-    private final boolean ponderado;
 
-    public Evolution(Fitness fitness,  int population_size,  int num_cameras, int N, int M, boolean ponderado) {
+
+    public Evolution(Fitness fitness,  int population_size) {
         this.fitness = fitness;
         this.population_size = population_size;
-        this.num_cameras = num_cameras;
-        this.N = N;
-        this.M = M;
-        this.ponderado = ponderado;
+
 
         globalBest = null;
     }
@@ -68,6 +62,8 @@ public class Evolution {
                                  String mutationMethodString,
                                  Random rand,
                                  int startIdx) {
+    	
+    	/*
 
         double sigmaX = 0.5;
         double sigmaY = 0.5;
@@ -86,10 +82,12 @@ public class Evolution {
 
             individual.setFitness(fitness.evaluate(individual, ponderado));
         }
+        */
     }
 
     public void evaluateAndNormalize(Population population) {
 
+    	/*
         for (Chromosome individual : population.getPopulation()) {
             individual.setFitness(fitness.evaluate(individual, ponderado));
         }
@@ -127,6 +125,8 @@ public class Evolution {
         }
 
         population.getPopulation().get(population.getPopulation().size()-1).setAcum_fitness(1.0);
+        
+        */
     }
 
     public GAResult evolveWithListener(int nGenerations,
@@ -138,6 +138,8 @@ public class Evolution {
                                        String crossOverMethodString,
                                        String mutationMethodString,
                                        EvolutionListener listener) {
+    	
+    	/*
 
         this.globalBest = population.getPopulation().get(0).clone();
         evaluateAndNormalize(population);
@@ -202,9 +204,14 @@ public class Evolution {
         }
 
         return new GAResult(this.globalBest.clone(), bestOfGen, globalBestSoFar, avgFitness);
+        
+        */
+    	return null;
     }
 
     private ArrayList<Chromosome> getElite(Population pop, int eliteCount) {
+    	
+    	/*
         ArrayList<Chromosome> list = new ArrayList<>(pop.getPopulation());
         list.sort((a, b) -> Integer.compare(b.getFitness(), a.getFitness())); // desc
 
@@ -213,5 +220,7 @@ public class Evolution {
             elite.add(list.get(i).clone());
         }
         return elite;
+        */
+    	return null;
     }
 }

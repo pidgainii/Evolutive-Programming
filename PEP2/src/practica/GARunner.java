@@ -20,10 +20,10 @@ public class GARunner {
                                String mut,
                                EvolutionListener listener) {
 
-        Fitness fitness = new Fitness(...);
-        Population pop = new Population(...);
-        Evolution evo = new Evolution(...);
-
-        return evo.evolveWithListener(gens, pop, pc, pm, elit, sel, cross, mut, listener);
+        Fitness fitness = new Fitness(board);
+        Population pop = new Population(fitness);
+        Evolution evo = new Evolution(fitness, popSize);
+        
+        return evo.evolveWithListener(gens, pop, pc, pm, elit, "change", "change", "change", listener);
     }
 }

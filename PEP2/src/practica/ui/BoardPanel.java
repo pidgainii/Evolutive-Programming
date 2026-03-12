@@ -11,6 +11,7 @@ public class BoardPanel extends JPanel {
     private Board board;
 
     public BoardPanel(Board board) {
+    	this.board = board;
         setPreferredSize(new Dimension(300, 300));
     }
 
@@ -52,12 +53,15 @@ public class BoardPanel extends JPanel {
         // Dibujar cámaras (círculos azules)
         
         ArrayList<Pair> camaras = board.getCamaras();
-        
+
         if (camaras != null) {
             g.setColor(Color.BLUE);
+
             for (Pair p : camaras) {
-                int x = p.x() * cw;
-                int y = p.y() * ch;
+
+                int x = p.y() * cw; // column
+                int y = p.x() * ch; // row
+
                 g.fillOval(x + cw/4, y + ch/4, cw/2, ch/2);
             }
         }
