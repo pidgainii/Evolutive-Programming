@@ -56,4 +56,17 @@ public class Maps {
         {0,1,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,1,0},
         {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
     };
+    
+    
+    
+    
+    public static int[][] copy(int[][] map) {
+        int[][] copy = new int[map.length][map[0].length];
+
+        for (int i = 0; i < map.length; i++) {
+            System.arraycopy(map[i], 0, copy[i], 0, map[i].length);
+        }
+
+        return copy;
+    }
 }

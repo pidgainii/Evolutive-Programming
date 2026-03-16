@@ -2,39 +2,35 @@ package practica.real;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Collections;
 
 public class Population {
 
     private final ArrayList<Chromosome> population;
 
-    public Population(Fitness fitness) {
+    public Population(Fitness fitness, int population_size, int num_camaras, int num_drones) {
 
     	
         this.population = new ArrayList<>();
+        int totalGenes = num_camaras + num_drones - 1;
         
-        /*
-        Random rand = new Random();
-
-        int totalGenes = 3 * numCameras;
-        for (int i = 0; i < size; i++) {
-
-            double[] genes = new double[totalGenes];
-
-
-            for (int camera = 0; camera < numCameras; camera++) {
-
-                int base = camera * 3;
-                // x, y, theta
-                genes[base] = rand.nextDouble() * N;
-                genes[base + 1] = rand.nextDouble() * M;
-                genes[base + 2] = rand.nextDouble() * 360;
-            }
-
+        ArrayList<Integer> ordered_list = new ArrayList<>();
+        for (int i = 0; i < totalGenes; i++) {
+        	ordered_list.add(i);
+        }
+        
+        
+        for (int i = 0; i < population_size; i++) {
+        	// NUESTRO CROMOSOMA SERÁ UNA PERMUTACION
+        	ArrayList<Integer> genes = new ArrayList<Integer>(ordered_list);
+            Collections.shuffle(genes);
+            
+            
             Chromosome newChromosome = new Chromosome(genes);
-            newChromosome.setFitness(fitness.evaluate(newChromosome, ponderado));
+            newChromosome.setFitness(fitness.evaluate(newChromosome));
             population.add(newChromosome);
         }
-        */
+
     }
 
     public Population() {

@@ -21,9 +21,10 @@ public class GARunner {
                                EvolutionListener listener) {
 
         Fitness fitness = new Fitness(board);
-        Population pop = new Population(fitness);
+        //Population pop = new Population(fitness);
         Evolution evo = new Evolution(fitness, popSize);
         
-        return evo.evolveWithListener(gens, pop, pc, pm, elit, "change", "change", "change", listener);
+        //return evo.evolveWithListener(gens, pop, pc, pm, elit, "change", "change", "change", listener);
+        return null;
     }
 }

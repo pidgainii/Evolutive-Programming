@@ -5,6 +5,9 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import practica.AStar;
+import practica.Maps;
+
 public class Board {
 	
 	
@@ -20,6 +23,9 @@ public class Board {
 	
 	// Este set nos servira para saber si hay camara en cierta posicion en tiempo cte.
 	private Set<Pair> setPosicionesCamaras;
+	
+	// Rutas precalculadas para mejor rendimiento
+	private ArrayList<Pair>[][] routes;
 	
 	public Board(int[][] map, int seed, int numCamaras) {
 		this.map = map;
@@ -49,10 +55,25 @@ public class Board {
 				setPosicionesCamaras.add(posicion);	
 			}	
 		}
+		
+		
+		routes = new ArrayList[NUM_CAMARAS][NUM_CAMARAS];
+
+		for (int i = 0; i < NUM_CAMARAS; i++) {
+		    for (int j = 0; j < NUM_CAMARAS; j++) {
+
+		        if (i == j) continue;
+
+		        Pair c1 = posicionesCamaras.get(i);
+		        Pair c2 = posicionesCamaras.get(j);
+
+		        routes[i][j] = AStar.a_star(this.map, c1, c2);
+		    }
+		}
 	}
 	
 	public int[][] getMap() {
-		return this.map;
+		return Maps.copy(this.map);
 	}
 	
 	public int N() {
@@ -65,6 +86,22 @@ public class Board {
 	
 	public ArrayList<Pair> getCamaras() {
 		return this.posicionesCamaras;
+	}
+	
+	public Set<Pair> getCamarasSet() {
+		return this.setPosicionesCamaras;
+	}
+	
+	public Pair getCamara(int index) {
+		return this.posicionesCamaras.get(index-1);
+	}
+	
+	public int getCellCost(Pair coord) {
+		return this.map[coord.x()][coord.y()];
+	}
+	
+	public ArrayList<Pair> getRoute(int cam1, int cam2) {
+	    return routes[cam1][cam2];
 	}
 	
 	public Board copy() {

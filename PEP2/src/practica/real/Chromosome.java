@@ -1,43 +1,50 @@
 package practica.real;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
 public class Chromosome {
-
-    private double[] genes;
-    private int fitness;
+	
+	
+	// Usamos arrayList y no int[] porque podemos hacer shuffle facilmente
+	// Además, los cruces y mutaciones van a ser más faciles con ArrayList
+	// A no ser que sea muy lento. Si es muy lento, lo cambiamos a int[][]
+	private ArrayList<Integer> genes;
+    private double fitness;
     private double acum_fitness;
     private double relative_fitness;
-
-    public Chromosome(double[] genes) {
-        this.genes = Arrays.copyOf(genes, genes.length);;
+    
+    
+    public Chromosome(ArrayList<Integer> genes) {
+    	this.genes = genes;
     }
-
+    
     public Chromosome(Chromosome chromosome) {
-        this.genes = Arrays.copyOf(chromosome.getGenes(), chromosome.getGenes().length);
+        this.genes = new ArrayList<Integer>(chromosome.getGenes());
         this.fitness = chromosome.getFitness();
         this.acum_fitness = chromosome.getAcum_fitness();
         this.relative_fitness = chromosome.getRelative_fitness();
     }
-
+    
     @Override
     public Chromosome clone() {
         return new Chromosome(this);
     }
 
-    public void setGenes(double[] genes) {
-        this.genes = Arrays.copyOf(genes, genes.length);
+    public void setGenes(ArrayList<Integer> genes) {
+    	this.genes = genes;
     }
-    public double[] getGenes() {
+    
+    public ArrayList<Integer> getGenes() {
         return genes;
     }
 
-    public int getFitness() {
+    public double getFitness() {
         return fitness;
     }
 
-    public void setFitness(int fitness) {
+    public void setFitness(double fitness) {
         this.fitness = fitness;
     }
 
@@ -57,6 +64,8 @@ public class Chromosome {
         this.relative_fitness = relative_fitness;
     }
 
+    
+    /*
     public Chromosome[] cross(Chromosome other, Random rand) {
         double[] g1 = this.getGenes();
         double[] g2 = other.getGenes();
@@ -177,5 +186,6 @@ public class Chromosome {
         if (deg < 0) deg += 360.0;
         return deg;
     }
+    */
 
 }

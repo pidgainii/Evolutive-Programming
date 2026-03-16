@@ -22,41 +22,7 @@ public class Evolution {
         globalBest = null;
     }
 
-    public void populationCross(Population population,
-                                double crossProbability,
-                                String crossoverMethodString,
-                                Random rand,
-                                int startIdx) {
-
-        ArrayList<Integer> selectedIdx = new ArrayList<>();
-
-        for (int idx = startIdx; idx < population.getPopulation().size(); idx++) {
-            if (rand.nextDouble() < crossProbability) selectedIdx.add(idx);
-        }
-
-        if (selectedIdx.size() % 2 != 0) selectedIdx.remove(selectedIdx.size()-1);
-
-        for (int i = 0; i < selectedIdx.size(); i += 2) {
-            int idx1 = selectedIdx.get(i);
-            int idx2 = selectedIdx.get(i + 1);
-
-            Chromosome father1 = population.getPopulation().get(idx1);
-            Chromosome father2 = population.getPopulation().get(idx2);
-
-            CrossoverMethod cm = CrossoverMethod.valueOf(crossoverMethodString);
-
-            Chromosome[] children = switch (cm) {
-                case ONE_POINT -> father1.cross(father2, rand);
-                case UNIFORM -> father1.crossUniform(father2, rand);
-                case ARITHMETIC -> father1.crossArithmetic(father2, rand);
-                case BLX_ALPHA -> father1.crossBlxAlpha(father2, rand, 0.5);
-            };
-
-            population.swap(idx1, children[0]);
-            population.swap(idx2, children[1]);
-        }
-    }
-
+   
     public void mutatePopulation(Population population,
                                  double mutationProbability,
                                  String mutationMethodString,
