@@ -21,97 +21,53 @@ public class Evolution {
 
         globalBest = null;
     }
-
-   
-    public void mutatePopulation(Population population,
-                                 double mutationProbability,
-                                 String mutationMethodString,
-                                 Random rand,
-                                 int startIdx) {
-    	
-    	/*
-
-        double sigmaX = 0.5;
-        double sigmaY = 0.5;
-        double sigmaTheta = 10.0;
-
-        MutationMethod mm = MutationMethod.valueOf(mutationMethodString);
-
-        for (int idx = startIdx; idx < population.getPopulation().size(); idx++) {
-            Chromosome individual = population.getPopulation().get(idx);
-
-            switch (mm) {
-                case GAUSSIAN -> individual.mutateGaussian(rand, mutationProbability, num_cameras, N, M,
-                        sigmaX, sigmaY, sigmaTheta);
-                case GENE -> individual.mutateGeneLevel(rand, mutationProbability, num_cameras, N, M);
-            }
-
-            individual.setFitness(fitness.evaluate(individual, ponderado));
-        }
-        */
-    }
-
+    
     public void evaluateAndNormalize(Population population) {
+    	
+    	double sumScores = 0.0;
 
-    	/*
-        for (Chromosome individual : population.getPopulation()) {
-            individual.setFitness(fitness.evaluate(individual, ponderado));
-        }
-
-        Chromosome localBest = population.getPopulation().get(0);
-        for (Chromosome individual : population.getPopulation()) {
-            if (individual.getFitness() > localBest.getFitness()) {
-                localBest = individual;
-            }
-        }
-
-        if (this.globalBest == null || localBest.getFitness() > this.globalBest.getFitness()) {
-            this.globalBest = localBest.clone();
-        }
-
-        int minFitness = Integer.MAX_VALUE;
-        for (Chromosome individual : population.getPopulation()) {
-            minFitness = Math.min(minFitness, individual.getFitness());
-        }
-
-        double fitnessSum = 0.0;
-        for (Chromosome individual : population.getPopulation()) {
-            double shifted = (double) (individual.getFitness() - minFitness) + 1.0;
-            fitnessSum += shifted;
-        }
-
+    	// evaluar y conseguir el menor fitness
+    	Chromosome localBest = null;
+    	for (Chromosome individual : population.getPopulation()) {
+    		individual.setFitness(fitness.evaluate(individual));
+    		
+    		if (localBest == null || individual.getFitness() > localBest.getFitness()) {
+    			localBest = individual;
+    		}
+    		
+    		sumScores += individual.getFitness();
+    	}
+    	
+    	// actualizar global fitness
+    	if (this.globalBest == null || localBest.getFitness() > globalBest.getFitness()) {
+    		this.globalBest = localBest.clone();
+    	}
+    	
         double accumulated = 0.0;
         for (Chromosome individual : population.getPopulation()) {
-            double shifted = (double) (individual.getFitness() - minFitness) + 1.0;
-            double rel = shifted / fitnessSum;
+            double rel = individual.getFitness() / sumScores;
             accumulated += rel;
 
             individual.setRelative_fitness(rel);
             individual.setAcum_fitness(accumulated);
         }
 
-        population.getPopulation().get(population.getPopulation().size()-1).setAcum_fitness(1.0);
-        
-        */
+        // force exact 1.0 to prevent pointer overflow in roulette/SUS
+        population.getPopulation().get(population.getPopulation().size() - 1).setAcum_fitness(1.0);
+    	
     }
 
     public GAResult evolveWithListener(int nGenerations,
                                        Population population,
-                                       double crossProbability,
-                                       double mutationProbability,
                                        double elitismRate,
                                        String selectionMethodString,
-                                       String crossOverMethodString,
-                                       String mutationMethodString,
                                        EvolutionListener listener) {
-    	
-    	/*
 
         this.globalBest = population.getPopulation().get(0).clone();
         evaluateAndNormalize(population);
 
-        int[] bestOfGen = new int[nGenerations];
-        int[] globalBestSoFar = new int[nGenerations];
+        double[] bestOfGen = new double[nGenerations];
+        double[] globalBestSoFar = new double[nGenerations];
         double[] avgFitness = new double[nGenerations];
 
         Random rand = new Random();
@@ -124,8 +80,8 @@ public class Evolution {
             // 1) capturar élite de la población actual
             ArrayList<Chromosome> elite = getElite(population, eliteCount);
 
-            // 2) crear nueva población con tamaño y seleccionar como siempre
-            Population newPopulation = new Population(fitness, this.population_size, this.num_cameras, N, M, ponderado);
+
+            Population newPopulation = new Population();
 
             SelectionMethod method = SelectionMethod.valueOf(selectionMethodString);
             Selection.select(method, population, newPopulation, population_size, rand);
@@ -135,20 +91,16 @@ public class Evolution {
                 newPopulation.swap(i, elite.get(i));
             }
 
-            // 4) cruce y mutación SOLO desde eliteCount
-            populationCross(newPopulation, crossProbability, crossOverMethodString, rand, eliteCount);
-            mutatePopulation(newPopulation, mutationProbability, mutationMethodString, rand, eliteCount);
-
             // 5) evaluar/normalizar
             evaluateAndNormalize(newPopulation);
 
             // stats
-            int best = Integer.MIN_VALUE;
-            long sum = 0;
+            double best = Double.NEGATIVE_INFINITY;
+            double sum = 0;
             Chromosome bestChr = newPopulation.getPopulation().get(0);
 
             for (Chromosome c : newPopulation.getPopulation()) {
-                int f = c.getFitness();
+            	double f = c.getFitness();
                 sum += f;
                 if (f > best) {
                     best = f;
@@ -171,22 +123,17 @@ public class Evolution {
 
         return new GAResult(this.globalBest.clone(), bestOfGen, globalBestSoFar, avgFitness);
         
-        */
-    	return null;
-    }
+     }
 
     private ArrayList<Chromosome> getElite(Population pop, int eliteCount) {
     	
-    	/*
         ArrayList<Chromosome> list = new ArrayList<>(pop.getPopulation());
-        list.sort((a, b) -> Integer.compare(b.getFitness(), a.getFitness())); // desc
+        list.sort((a, b) -> Double.compare(b.getFitness(), a.getFitness())); // desc
 
         ArrayList<Chromosome> elite = new ArrayList<>();
         for (int i = 0; i < eliteCount && i < list.size(); i++) {
             elite.add(list.get(i).clone());
         }
         return elite;
-        */
-    	return null;
     }
 }

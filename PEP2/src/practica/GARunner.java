@@ -19,12 +19,16 @@ public class GARunner {
                                String cross,
                                String mut,
                                EvolutionListener listener) {
-
+    	
         Fitness fitness = new Fitness(board);
-        //Population pop = new Population(fitness);
+
+        int numDrones = 5;
+
+        int numCamaras = board.getNumCamaras();
+
+        Population pop = new Population(fitness, popSize, numCamaras, numDrones);
         Evolution evo = new Evolution(fitness, popSize);
-        
-        //return evo.evolveWithListener(gens, pop, pc, pm, elit, "change", "change", "change", listener);
-        return null;
+
+        return evo.evolveWithListener(gens, pop, elit, sel, listener);
     }
 }

@@ -27,15 +27,20 @@ public class Board {
 	// Rutas precalculadas para mejor rendimiento
 	private ArrayList<Pair>[][] routes;
 	
+	// Calcular coste directamente
+	private int[][] costes;
+	
 	public Board(int[][] map, int seed, int numCamaras) {
 		this.map = map;
 		this.seed = seed;
 		this.NUM_CAMARAS = numCamaras;
 		this.N = map.length;
 		this.M = map[0].length;
+		this.costes = new int[numCamaras][numCamaras];
 		
 		this.setPosicionesCamaras = new HashSet<Pair>();
 		this.posicionesCamaras = new ArrayList<Pair>();
+		
 		
 		Random rand = new Random(this.seed);
 		
@@ -60,14 +65,22 @@ public class Board {
 		routes = new ArrayList[NUM_CAMARAS][NUM_CAMARAS];
 
 		for (int i = 0; i < NUM_CAMARAS; i++) {
-		    for (int j = 0; j < NUM_CAMARAS; j++) {
+		    for (int j = i; j < NUM_CAMARAS; j++) {
 
-		        if (i == j) continue;
+		        if (i == j) {
+		        	routes[i][j] = new ArrayList<>();
+		        	continue;
+		        }
 
 		        Pair c1 = posicionesCamaras.get(i);
 		        Pair c2 = posicionesCamaras.get(j);
 
-		        routes[i][j] = AStar.a_star(this.map, c1, c2);
+		        routes[i][j] = AStar.a_star(this.map, c1, c2, setPosicionesCamaras);
+		        routes[j][i] = routes[i][j];
+		        
+		        int coste = this.costeDistancia(i, j);
+		        costes[i][j] = coste;
+		        costes[j][i] = coste;
 		    }
 		}
 	}
@@ -88,8 +101,16 @@ public class Board {
 		return this.posicionesCamaras;
 	}
 	
+	public int getNumCamaras() {
+		return this.NUM_CAMARAS;
+	}
+	
 	public Set<Pair> getCamarasSet() {
 		return this.setPosicionesCamaras;
+	}
+	
+	public int getCoste(int i, int j) {
+		return costes[i][j];
 	}
 	
 	public Pair getCamara(int index) {
@@ -127,15 +148,20 @@ public class Board {
 	    return copy;
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	private int costeDistancia(int camara1, int camara2) {
+
+		
+		int coste = 0;
+		
+		// funcion que nos devuelve la ruta de una camara a otra (sin pasar por muros)
+		ArrayList<Pair> ruta = this.getRoute(camara1, camara2);
+		
+		
+		// Vamos sumando el coste de cada celda
+		for (Pair p: ruta) {
+			coste += this.getCellCost(p);
+		}
+		
+		return coste;
+	}
 }

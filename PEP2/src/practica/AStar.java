@@ -5,8 +5,10 @@ import java.util.*;
 import practica.real.Pair;
 
 public class AStar {
+	
+	static final int PENALTY = 500;
 
-    public static ArrayList<Pair> a_star(int[][] map, Pair start, Pair goal) {
+    public static ArrayList<Pair> a_star(int[][] map, Pair start, Pair goal, Set<Pair> cameraPositions) {
 
         int rows = map.length;
         int cols = map[0].length;
@@ -50,8 +52,15 @@ public class AStar {
 
                 if (closed.contains(neighbor))
                     continue;
+                
+                int stepCost = map[nx][ny];
+                
+                if (cameraPositions.contains(neighbor) && !neighbor.equals(goal)) {
+                	stepCost += PENALTY;
+                }
 
-                int tentativeG = gScore.get(current) + 1;
+                
+                int tentativeG = gScore.get(current) + stepCost;
 
                 if (!gScore.containsKey(neighbor) || tentativeG < gScore.get(neighbor)) {
 

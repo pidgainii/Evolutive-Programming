@@ -67,6 +67,8 @@ public class Graphic extends JFrame {
     // CONSTRUCTOR
     public Graphic() {
     	super("Práctica 2");
+    	
+    	this.map = Maps.MAP1;
 
         int seed = (Integer) spSeed.getValue();
         int num_camaras = (Integer) spNCam.getValue();
@@ -139,7 +141,7 @@ public class Graphic extends JFrame {
             sBestGen.addOrUpdate(gen, bestGen);
             sBestEver.addOrUpdate(gen, bestEver);
             sAvg.addOrUpdate(gen, avg);
-            lblBest.setText("Best: " + bestEver);
+            lblBest.setText(String.format("Best: %.6f", bestEver));
 
 
             // Que hay que dibujar del mapa?
@@ -166,7 +168,7 @@ public class Graphic extends JFrame {
 
                     practica.real.Chromosome best = (practica.real.Chromosome) bestObj;
                     txt.append("Best fitness: " + best.getFitness() + "\n");
-                    txt.append("Best genes: " + Arrays.toString(best.getGenes()) + "\n");
+                    txt.append("Best genes: " + best.getGenes().toString() + "\n");
                 });
 
             } catch (Exception ex) {

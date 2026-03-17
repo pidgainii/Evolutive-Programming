@@ -27,7 +27,7 @@ public class Selection {
             double prob = rand.nextDouble();
             int pos = 0;
             while (prob > actual.getPopulation().get(pos).getAcum_fitness()) pos++;
-            dest.getPopulation().set(i, actual.getPopulation().get(pos).clone());
+            put(dest, i, actual.getPopulation().get(pos).clone());
         }
     }
 
@@ -39,7 +39,7 @@ public class Selection {
                 Chromosome c = actual.getPopulation().get(rand.nextInt(n));
                 if (best == null || c.getFitness() > best.getFitness()) best = c;
             }
-            dest.getPopulation().set(i, best.clone());
+            put(dest, i, best.clone());
         }
     }
 
@@ -52,20 +52,20 @@ public class Selection {
         for (int i = 0; i < populationSize; i++) {
             double pointer = start + i * step;
             while (pointer > actual.getPopulation().get(idx).getAcum_fitness()) idx++;
-            dest.getPopulation().set(i, actual.getPopulation().get(idx).clone());
+            put(dest, i, actual.getPopulation().get(idx).clone());
         }
     }
 
     // truncationRate=0.5 => eliges del top 50% de fitness
     public static void truncation(Population actual, Population dest, int populationSize, double truncationRate, Random rand) {
         ArrayList<Chromosome> sorted = new ArrayList<>(actual.getPopulation());
-        sorted.sort(Comparator.comparingInt(Chromosome::getFitness).reversed());
+        sorted.sort(Comparator.comparingDouble(Chromosome::getFitness).reversed());
 
         int cutoff = Math.max(1, (int) Math.floor(sorted.size() * truncationRate));
 
         for (int i = 0; i < populationSize; i++) {
             Chromosome chosen = sorted.get(rand.nextInt(cutoff));
-            dest.getPopulation().set(i, chosen.clone());
+            put(dest, i, chosen.clone());
         }
     }
 
@@ -80,7 +80,7 @@ public class Selection {
             double expected = c.getRelative_fitness() * populationSize;
             int copies = (int) Math.floor(expected);
             for (int k = 0; k < copies && filled < populationSize; k++) {
-                dest.getPopulation().set(filled++, c.clone());
+                put(dest, filled++, c.clone());
             }
             double frac = expected - copies;
             // metemos el individuo en un pool con peso "frac"
@@ -99,14 +99,22 @@ public class Selection {
                 double prob = rand.nextDouble();
                 int pos = 0;
                 while (prob > actual.getPopulation().get(pos).getAcum_fitness()) pos++;
-                dest.getPopulation().set(i, actual.getPopulation().get(pos).clone());
+                put(dest, i, actual.getPopulation().get(pos).clone());
             }
             return;
         }
 
         for (int i = filled; i < populationSize; i++) {
             Chromosome chosen = remainderPool.get(rand.nextInt(remainderPool.size()));
-            dest.getPopulation().set(i, chosen.clone());
+            put(dest, i, chosen.clone());
+        }
+    }
+    
+    private static void put(Population dest, int index, Chromosome value) {
+        if (dest.getPopulation().size() <= index) {
+            dest.getPopulation().add(value);
+        } else {
+            dest.getPopulation().set(index, value);
         }
     }
 }
