@@ -165,7 +165,7 @@ public class Evolution {
                 newPopulation.swap(i, elite.get(i));
             }
 
-            // 4) cruce y mutación SOLO desde eliteCount
+            // 4) cruce y mutación solo desde eliteCount
             populationCross(newPopulation, crossProbability, crossOverMethodString, rand, eliteCount);
             mutatePopulation(newPopulation, mutationProbability, mutationMethodString, rand, eliteCount);
 
@@ -211,5 +211,23 @@ public class Evolution {
             elite.add(list.get(i).clone());
         }
         return elite;
+    }
+
+    private void injectRandomImmigrants(Population population,
+                                        int eliteCount,
+                                        double immigrantRate,
+                                        Random rand) {
+
+        int numImmigrants = (int) (population_size * immigrantRate);
+
+        for (int i = 0; i < numImmigrants; i++) {
+
+            int idx = eliteCount + rand.nextInt(population_size - eliteCount);
+
+            Chromosome randomChr = new Chromosome(num_cameras, N, M);
+            randomChr.setFitness(fitness.evaluate(randomChr));
+
+            population.swap(idx, randomChr);
+        }
     }
 }
