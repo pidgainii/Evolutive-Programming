@@ -31,7 +31,7 @@ public class Evolution {
     	for (Chromosome individual : population.getPopulation()) {
     		individual.setFitness(fitness.evaluate(individual));
     		
-    		if (localBest == null || individual.getFitness() > localBest.getFitness()) {
+    		if (localBest == null || individual.getFitness() < localBest.getFitness()) {
     			localBest = individual;
     		}
     		
@@ -39,7 +39,7 @@ public class Evolution {
     	}
     	
     	// actualizar global fitness
-    	if (this.globalBest == null || localBest.getFitness() > globalBest.getFitness()) {
+    	if (this.globalBest == null || localBest.getFitness() < globalBest.getFitness()) {
     		this.globalBest = localBest.clone();
     	}
     	
@@ -95,14 +95,14 @@ public class Evolution {
             evaluateAndNormalize(newPopulation);
 
             // stats
-            double best = Double.NEGATIVE_INFINITY;
+            double best = Double.POSITIVE_INFINITY;
             double sum = 0;
             Chromosome bestChr = newPopulation.getPopulation().get(0);
 
             for (Chromosome c : newPopulation.getPopulation()) {
             	double f = c.getFitness();
                 sum += f;
-                if (f > best) {
+                if (f < best) {
                     best = f;
                     bestChr = c;
                 }
@@ -128,7 +128,7 @@ public class Evolution {
     private ArrayList<Chromosome> getElite(Population pop, int eliteCount) {
     	
         ArrayList<Chromosome> list = new ArrayList<>(pop.getPopulation());
-        list.sort((a, b) -> Double.compare(b.getFitness(), a.getFitness())); // desc
+        list.sort((a, b) -> Double.compare(a.getFitness(), b.getFitness())); // asc
 
         ArrayList<Chromosome> elite = new ArrayList<>();
         for (int i = 0; i < eliteCount && i < list.size(); i++) {

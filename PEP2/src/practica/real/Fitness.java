@@ -81,7 +81,7 @@ public class Fitness {
 	    double penalizacionDesequilibrio = (maxT - minT) * 0.5;
 	    double time = maxT + penalizacionDesequilibrio;
 
-	    return 1.0 / (1.0 + time);
+	    return time;
 	}
 	
 }

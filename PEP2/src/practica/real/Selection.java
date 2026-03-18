@@ -22,7 +22,34 @@ public class Selection {
         }
     }
 
+    // ---- Helper para obtener score invertido ----
+    private static double score(Chromosome c, double maxFitness) {
+        return maxFitness - c.getFitness(); // menor fitness = mayor score
+    }
+
+    // ---- Métodos adaptados ----
+
     public static void roulette(Population actual, Population dest, int populationSize, Random rand) {
+        double maxFitness = actual.getPopulation().stream()
+                .mapToDouble(Chromosome::getFitness)
+                .max().orElse(1.0);
+
+        double sumScores = 0.0;
+        for (Chromosome c : actual.getPopulation()) {
+            sumScores += score(c, maxFitness);
+        }
+
+        // Calcular acumulado
+        double accumulated = 0.0;
+        for (Chromosome c : actual.getPopulation()) {
+            double rel = score(c, maxFitness) / sumScores;
+            accumulated += rel;
+            c.setRelative_fitness(rel);
+            c.setAcum_fitness(accumulated);
+        }
+        actual.getPopulation().get(actual.getPopulation().size() - 1).setAcum_fitness(1.0);
+
+        // Selección ruleta
         for (int i = 0; i < populationSize; i++) {
             double prob = rand.nextDouble();
             int pos = 0;
@@ -33,18 +60,39 @@ public class Selection {
 
     public static void tournament(Population actual, Population dest, int populationSize, int k, Random rand) {
         int n = actual.getPopulation().size();
+        double maxFitness = actual.getPopulation().stream()
+                .mapToDouble(Chromosome::getFitness)
+                .max().orElse(1.0);
+
         for (int i = 0; i < populationSize; i++) {
             Chromosome best = null;
             for (int j = 0; j < k; j++) {
                 Chromosome c = actual.getPopulation().get(rand.nextInt(n));
-                if (best == null || c.getFitness() > best.getFitness()) best = c;
+                if (best == null || score(c, maxFitness) > score(best, maxFitness)) best = c;
             }
             put(dest, i, best.clone());
         }
     }
 
-    // SUS: Stochastic Universal Sampling
     public static void stochasticUniversal(Population actual, Population dest, int populationSize, Random rand) {
+        double maxFitness = actual.getPopulation().stream()
+                .mapToDouble(Chromosome::getFitness)
+                .max().orElse(1.0);
+
+        // recalcular acumulado
+        double sumScores = 0.0;
+        for (Chromosome c : actual.getPopulation()) sumScores += score(c, maxFitness);
+
+        double accumulated = 0.0;
+        for (Chromosome c : actual.getPopulation()) {
+            double rel = score(c, maxFitness) / sumScores;
+            accumulated += rel;
+            c.setRelative_fitness(rel);
+            c.setAcum_fitness(accumulated);
+        }
+        actual.getPopulation().get(actual.getPopulation().size() - 1).setAcum_fitness(1.0);
+
+        // SUS
         double step = 1.0 / populationSize;
         double start = rand.nextDouble() * step;
 
@@ -56,10 +104,13 @@ public class Selection {
         }
     }
 
-    // truncationRate=0.5 => eliges del top 50% de fitness
     public static void truncation(Population actual, Population dest, int populationSize, double truncationRate, Random rand) {
+        double maxFitness = actual.getPopulation().stream()
+                .mapToDouble(Chromosome::getFitness)
+                .max().orElse(1.0);
+
         ArrayList<Chromosome> sorted = new ArrayList<>(actual.getPopulation());
-        sorted.sort(Comparator.comparingDouble(Chromosome::getFitness).reversed());
+        sorted.sort(Comparator.comparingDouble(c -> -score(c, maxFitness))); // score descendente
 
         int cutoff = Math.max(1, (int) Math.floor(sorted.size() * truncationRate));
 
@@ -69,9 +120,11 @@ public class Selection {
         }
     }
 
-    // Remainders: floor(expected) copies + roulette for the remaining slots
     public static void remainders(Population actual, Population dest, int populationSize, Random rand) {
-        // expected copies = relativeFitness * populationSize
+        double maxFitness = actual.getPopulation().stream()
+                .mapToDouble(Chromosome::getFitness)
+                .max().orElse(1.0);
+
         ArrayList<Chromosome> remainderPool = new ArrayList<>();
         int filled = 0;
 
@@ -79,13 +132,9 @@ public class Selection {
         for (Chromosome c : actual.getPopulation()) {
             double expected = c.getRelative_fitness() * populationSize;
             int copies = (int) Math.floor(expected);
-            for (int k = 0; k < copies && filled < populationSize; k++) {
-                put(dest, filled++, c.clone());
-            }
+            for (int k = 0; k < copies && filled < populationSize; k++) put(dest, filled++, c.clone());
             double frac = expected - copies;
-            // metemos el individuo en un pool con peso "frac"
             if (frac > 0) {
-                // discretización simple: multiplicamos por 1000
                 int tickets = (int) Math.round(frac * 1000.0);
                 for (int t = 0; t < tickets; t++) remainderPool.add(c);
             }
@@ -93,7 +142,6 @@ public class Selection {
 
         if (filled >= populationSize) return;
 
-        // 2) completar por ruleta sobre el pool fraccional (si está vacío, fallback ruleta normal)
         if (remainderPool.isEmpty()) {
             for (int i = filled; i < populationSize; i++) {
                 double prob = rand.nextDouble();
@@ -109,7 +157,7 @@ public class Selection {
             put(dest, i, chosen.clone());
         }
     }
-    
+
     private static void put(Population dest, int index, Chromosome value) {
         if (dest.getPopulation().size() <= index) {
             dest.getPopulation().add(value);
