@@ -105,13 +105,16 @@ public class BoardPanel extends JPanel {
         
         // 3) Draw routes
         if (routes != null) {
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setStroke(new BasicStroke(2)); // thicker lines
+
             Color[] colors = {Color.GREEN, Color.MAGENTA, Color.CYAN, Color.ORANGE, Color.PINK};
 
             for (int r = 0; r < routes.size(); r++) {
                 ArrayList<Pair> route = routes.get(r);
                 if (route.size() < 2) continue;
 
-                g.setColor(colors[r % colors.length]);
+                g2.setColor(colors[r % colors.length]);
 
                 for (int i = 0; i < route.size() - 1; i++) {
                     Pair p1 = route.get(i);
@@ -123,7 +126,7 @@ public class BoardPanel extends JPanel {
                     int x2 = p2.y() * cw + cw / 2;
                     int y2 = p2.x() * ch + ch / 2;
 
-                    g.drawLine(x1, y1, x2, y2);
+                    g2.drawLine(x1, y1, x2, y2);
                 }
             }
         }
