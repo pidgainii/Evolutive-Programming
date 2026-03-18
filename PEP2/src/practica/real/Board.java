@@ -30,6 +30,8 @@ public class Board {
 	// Calcular coste directamente
 	private int[][] costes;
 	
+	private Pair base;
+	
 	public Board(int[][] map, int seed, int numCamaras) {
 		this.map = map;
 		this.seed = seed;
@@ -41,6 +43,7 @@ public class Board {
 		this.setPosicionesCamaras = new HashSet<Pair>();
 		this.posicionesCamaras = new ArrayList<Pair>();
 		
+		this.base = this.calcularBase();
 		
 		Random rand = new Random(this.seed);
 		
@@ -170,5 +173,29 @@ public class Board {
 	        throw new IllegalArgumentException("Camera id out of range: " + camId1Based);
 	    }
 	    return posicionesCamaras.get(camId1Based - 1);
+	}
+	
+	private Pair calcularBase() {
+		
+		int i = 0;
+		int j = 0;
+		
+		while (i < this.N) {
+			j = 0;
+			while (j < this.M) {
+				
+				if (this.map[i][j] != 0) {
+					return new Pair(i, j);
+				}
+				j++;
+			}
+			i++;
+		}
+		
+		return new Pair(0, 0);
+	}
+	
+	public Pair getBase() {
+		return this.base;
 	}
 }

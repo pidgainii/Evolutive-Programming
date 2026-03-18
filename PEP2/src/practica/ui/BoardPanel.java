@@ -19,7 +19,6 @@ public class BoardPanel extends JPanel {
         this.board = board;
         repaint();
     }
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -35,7 +34,6 @@ public class BoardPanel extends JPanel {
                 int v = board.getMap()[i][j];
 
                 Color color;
-
                 if (v == 0) color = Color.DARK_GRAY;
                 else if (v >= 20) color = new Color(255, 80, 80);
                 else if (v >= 15) color = new Color(255, 140, 0);
@@ -50,11 +48,30 @@ public class BoardPanel extends JPanel {
             }
         }
 
-        // Dibujar cámaras (círculos azules)
-        
-     // Dibujar cámaras (círculos azules) + su ID (1..N)
-        ArrayList<Pair> camaras = board.getCamaras();
+        // 1) Dibujar la BASE en rojo (si existe)
+        Pair base = board.getBase();
+        if (base != null) {
+            int bx = base.y() * cw;
+            int by = base.x() * ch;
 
+            g.setColor(Color.RED);
+            g.fillRect(bx, by, cw, ch);
+
+            // opcional: borde para que destaque
+            g.setColor(Color.BLACK);
+            g.drawRect(bx, by, cw, ch);
+
+            // opcional: una "B" encima
+            g.setColor(Color.WHITE);
+            String t = "B";
+            FontMetrics fm = g.getFontMetrics();
+            int tx = bx + (cw - fm.stringWidth(t)) / 2;
+            int ty = by + (ch + fm.getAscent()) / 2 - 2;
+            g.drawString(t, tx, ty);
+        }
+
+        // 2) Dibujar cámaras (círculos azules) + su ID (1..N)
+        ArrayList<Pair> camaras = board.getCamaras();
         if (camaras != null) {
             for (int idx0 = 0; idx0 < camaras.size(); idx0++) {
                 Pair p = camaras.get(idx0);
@@ -62,18 +79,15 @@ public class BoardPanel extends JPanel {
                 int x = p.y() * cw; // column
                 int y = p.x() * ch; // row
 
-                // círculo
                 g.setColor(Color.BLUE);
                 g.fillOval(x + cw/4, y + ch/4, cw/2, ch/2);
 
-                // texto (ID 1-based)
                 String idText = String.valueOf(idx0 + 1);
                 g.setColor(Color.WHITE);
 
                 FontMetrics fm = g.getFontMetrics();
                 int tx = x + (cw - fm.stringWidth(idText)) / 2;
                 int ty = y + (ch + fm.getAscent()) / 2 - 2;
-
                 g.drawString(idText, tx, ty);
             }
         }
