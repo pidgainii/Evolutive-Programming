@@ -52,17 +52,29 @@ public class BoardPanel extends JPanel {
 
         // Dibujar cámaras (círculos azules)
         
+     // Dibujar cámaras (círculos azules) + su ID (1..N)
         ArrayList<Pair> camaras = board.getCamaras();
 
         if (camaras != null) {
-            g.setColor(Color.BLUE);
-
-            for (Pair p : camaras) {
+            for (int idx0 = 0; idx0 < camaras.size(); idx0++) {
+                Pair p = camaras.get(idx0);
 
                 int x = p.y() * cw; // column
                 int y = p.x() * ch; // row
 
+                // círculo
+                g.setColor(Color.BLUE);
                 g.fillOval(x + cw/4, y + ch/4, cw/2, ch/2);
+
+                // texto (ID 1-based)
+                String idText = String.valueOf(idx0 + 1);
+                g.setColor(Color.WHITE);
+
+                FontMetrics fm = g.getFontMetrics();
+                int tx = x + (cw - fm.stringWidth(idText)) / 2;
+                int ty = y + (ch + fm.getAscent()) / 2 - 2;
+
+                g.drawString(idText, tx, ty);
             }
         }
     }

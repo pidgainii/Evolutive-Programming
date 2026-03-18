@@ -284,7 +284,7 @@ public class Graphic extends JFrame {
         txt.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
 
         JScrollPane log = new JScrollPane(txt);
-        log.setPreferredSize(new Dimension(500,50));
+        log.setPreferredSize(new Dimension(500,100));
         log.setBorder(BorderFactory.createTitledBorder("Execution Log"));
 
         // Board (bottom big square)

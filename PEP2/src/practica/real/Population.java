@@ -10,27 +10,23 @@ public class Population {
 
     public Population(Fitness fitness, int population_size, int num_camaras, int num_drones) {
 
-    	
         this.population = new ArrayList<>();
+
         int totalGenes = num_camaras + num_drones - 1;
-        
+
         ArrayList<Integer> ordered_list = new ArrayList<>();
-        for (int i = 0; i < totalGenes; i++) {
-        	ordered_list.add(i);
+        for (int id = 1; id <= totalGenes; id++) {
+            ordered_list.add(id);
         }
-        
-        
+
         for (int i = 0; i < population_size; i++) {
-        	// NUESTRO CROMOSOMA SERÁ UNA PERMUTACION
-        	ArrayList<Integer> genes = new ArrayList<Integer>(ordered_list);
+            ArrayList<Integer> genes = new ArrayList<>(ordered_list);
             Collections.shuffle(genes);
-            
-            
+
             Chromosome newChromosome = new Chromosome(genes);
             newChromosome.setFitness(fitness.evaluate(newChromosome));
             population.add(newChromosome);
         }
-
     }
 
     public Population() {

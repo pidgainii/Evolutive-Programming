@@ -45,8 +45,8 @@ public class Board {
 		Random rand = new Random(this.seed);
 		
 		while (posicionesCamaras.size() < this.NUM_CAMARAS) {
-			int x = rand.nextInt(this.N);
 			int y = rand.nextInt(this.M);
+			int x = rand.nextInt(this.N);
 			
 			Pair posicion = new Pair(x,y);
 			
@@ -163,5 +163,12 @@ public class Board {
 		}
 		
 		return coste;
+	}
+	
+	public Pair getCamaraById(int camId1Based) {
+	    if (camId1Based < 1 || camId1Based > NUM_CAMARAS) {
+	        throw new IllegalArgumentException("Camera id out of range: " + camId1Based);
+	    }
+	    return posicionesCamaras.get(camId1Based - 1);
 	}
 }
