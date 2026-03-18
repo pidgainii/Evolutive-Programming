@@ -30,7 +30,8 @@ public class Board {
 	// Calcular coste directamente
 	private int[][] costes;
 	
-	private Pair base;
+	private final Pair base;
+	private int[] costesBaseCam;
 	
 	public Board(int[][] map, int seed, int numCamaras) {
 		this.map = map;
@@ -84,8 +85,23 @@ public class Board {
 		        int coste = this.costeDistancia(i, j);
 		        costes[i][j] = coste;
 		        costes[j][i] = coste;
+		        
 		    }
 		}
+		
+        this.costesBaseCam = new int[NUM_CAMARAS];
+
+        for (int i = 0; i < NUM_CAMARAS; i++) {
+            Pair cam = posicionesCamaras.get(i);
+
+            ArrayList<Pair> rutaBaseCam = AStar.a_star(this.map, this.base, cam, setPosicionesCamaras);
+
+            int coste = 0;
+    		for (Pair p: rutaBaseCam) {
+    			coste += this.getCellCost(p);
+    		}
+            costesBaseCam[i] = coste;
+        }
 	}
 	
 	public int[][] getMap() {
@@ -161,8 +177,8 @@ public class Board {
 		
 		
 		// Vamos sumando el coste de cada celda
-		for (Pair p: ruta) {
-			coste += this.getCellCost(p);
+		for (int i = 1; i < ruta.size(); i++) {
+		    coste += this.getCellCost(ruta.get(i));
 		}
 		
 		return coste;
@@ -197,5 +213,9 @@ public class Board {
 	
 	public Pair getBase() {
 		return this.base;
+	}
+	
+	public int getCosteBaseCam(int cam) {
+	    return this.costesBaseCam[cam];
 	}
 }

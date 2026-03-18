@@ -16,7 +16,6 @@ public class Fitness {
 		this.board = board;
 	}
 
-	// Esta funcion ahora cambia por completo
 	public double evaluate(Chromosome individual) {
 
 	    ArrayList<Integer> genes = individual.getGenes();
@@ -29,31 +28,52 @@ public class Fitness {
 
 	    int num_camaras = this.board.getNumCamaras();
 
-	    for (int i = 0; i < genes.size() - 1; i++) {
+	    Integer prevCam = null; // última cámara del dron actual (para segmentos y para volver a base)
+	    boolean started = false; // si este dron ya ha salido de base
 
-	        int aId = genes.get(i);
-	        int bId = genes.get(i + 1);
+	    for (int i = 0; i < genes.size(); i++) {
+	        int g = genes.get(i);
 
-	        // separador => cambiamos de dron
-	        if (aId > num_camaras) {
+	        // separador => cerrar dron (volver a base) y pasar al siguiente
+	        if (g >= num_camaras) {
+	            if (prevCam != null) {
+	                int costBack = board.getCosteBaseCam(prevCam);
+	                costes_dron.set(current_dron,
+	                        costes_dron.get(current_dron) + costBack / dron_velocity[current_dron]);
+	            }
+
 	            current_dron++;
 	            costes_dron.add(0.0);
+	            prevCam = null;
+	            started = false;
 	            continue;
 	        }
 
-	        // si el siguiente es separador, no calculamos tramo
-	        if (bId > num_camaras) {
+	        // gen es cámara
+	        int cam = g;
+
+	        // primera cámara del dron: base -> cam
+	        if (!started) {
+	            int costOut = board.getCosteBaseCam(cam);
+	            costes_dron.set(current_dron,
+	                    costes_dron.get(current_dron) + costOut / dron_velocity[current_dron]);
+	            started = true;
+	            prevCam = cam;
 	            continue;
 	        }
 
-	        // convertir IDs 1-based a índices 0-based para la matriz de costes
-	        int a0 = aId - 1;
-	        int b0 = bId - 1;
+	        // segmento normal prevCam -> cam
+	        int costSeg = this.board.getCoste(prevCam, cam);
+	        costes_dron.set(current_dron,
+	                costes_dron.get(current_dron) + costSeg / dron_velocity[current_dron]);
+	        prevCam = cam;
+	    }
 
-	        int costD = this.board.getCoste(a0, b0);
-
-	        double costeTiempo = (double) costD / dron_velocity[current_dron];
-	        costes_dron.set(current_dron, costes_dron.get(current_dron) + costeTiempo);
+	    // cerrar último dron (volver a base)
+	    if (prevCam != null) {
+	        int costBack = board.getCosteBaseCam(prevCam);
+	        costes_dron.set(current_dron,
+	                costes_dron.get(current_dron) + costBack / dron_velocity[current_dron]);
 	    }
 
 	    double maxT = Collections.max(costes_dron);
