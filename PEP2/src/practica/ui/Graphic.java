@@ -6,6 +6,9 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import java.awt.BasicStroke;
 
 import javax.swing.*;
 import java.awt.*;
@@ -325,6 +328,24 @@ public class Graphic extends JFrame {
                 PlotOrientation.VERTICAL,
                 true, true, false
         );
+        
+        XYPlot plot = chart.getXYPlot();
+
+	     // cambiar color de las series (opcional, más visible)
+	     plot.getRenderer().setSeriesPaint(0, Color.RED);    // Mejor generación
+	     plot.getRenderer().setSeriesPaint(1, Color.BLUE);   // Mejor histórico
+	     plot.getRenderer().setSeriesPaint(2, Color.GREEN);  // Media
+	
+	     // aumentar grosor de las líneas
+	     plot.getRenderer().setSeriesStroke(0, new BasicStroke(2.0f));
+	     plot.getRenderer().setSeriesStroke(1, new BasicStroke(2.0f));
+	     plot.getRenderer().setSeriesStroke(2, new BasicStroke(1.0f));
+
+	     plot.setBackgroundPaint(Color.WHITE);
+	     plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
+	     plot.setDomainGridlinePaint(Color.LIGHT_GRAY);
+	     chart.getTitle().setFont(new Font("Arial", Font.BOLD, 16));
+	     chart.getLegend().setItemFont(new Font("Arial", Font.PLAIN, 12));
 
         return new ChartPanel(chart);
     }
