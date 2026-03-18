@@ -30,7 +30,7 @@ public class Board {
 	// Calcular coste directamente
 	private int[][] costes;
 	
-	private final Pair base;
+	private Pair base;
 	private int[] costesBaseCam;
 	
 	public Board(int[][] map, int seed, int numCamaras) {
@@ -66,30 +66,45 @@ public class Board {
 		}
 		
 		
-		routes = new ArrayList[NUM_CAMARAS][NUM_CAMARAS];
+		this.routes = new ArrayList[NUM_CAMARAS][NUM_CAMARAS];
 
 		for (int i = 0; i < NUM_CAMARAS; i++) {
 		    for (int j = i; j < NUM_CAMARAS; j++) {
 
 		        if (i == j) {
-		        	routes[i][j] = new ArrayList<>();
+		        	this.routes[i][j] = new ArrayList<>();
 		        	continue;
 		        }
 
 		        Pair c1 = posicionesCamaras.get(i);
 		        Pair c2 = posicionesCamaras.get(j);
 
-		        routes[i][j] = AStar.a_star(this.map, c1, c2, setPosicionesCamaras);
-		        routes[j][i] = routes[i][j];
+		        /*
+		         * Esto nos devuelve la ruta completa, con la casilla de inicio y fin incluidas
+		         * Necesitamos quitar la casilla de inicio, SOLO incluir la de fin
+		         */
+		        ArrayList<Pair> path = AStar.a_star(this.map, c1, c2, setPosicionesCamaras);
+		        
+		        this.routes[i][j] = new ArrayList<Pair>(path);
+		        // Le quitamos la primera
+		        this.routes[i][j].remove(0);
+		        
+		        
+		        // Aqui la ruta no es la misma, es la contraria (simétrica)
+		        ArrayList<Pair> reversed = new ArrayList<>(path);
+		        java.util.Collections.reverse(reversed);
+
+		        this.routes[j][i] = reversed;
+		        // Le quitamos la primera
+		        this.routes[j][i].remove(0);
 		        
 		        int coste = this.costeDistancia(i, j);
 		        costes[i][j] = coste;
 		        costes[j][i] = coste;
-		        
 		    }
 		}
-		
-        this.costesBaseCam = new int[NUM_CAMARAS];
+
+		this.costesBaseCam = new int[NUM_CAMARAS];
 
         for (int i = 0; i < NUM_CAMARAS; i++) {
             Pair cam = posicionesCamaras.get(i);
@@ -102,6 +117,8 @@ public class Board {
     		}
             costesBaseCam[i] = coste;
         }
+
+
 	}
 	
 	public int[][] getMap() {
@@ -177,8 +194,8 @@ public class Board {
 		
 		
 		// Vamos sumando el coste de cada celda
-		for (int i = 1; i < ruta.size(); i++) {
-		    coste += this.getCellCost(ruta.get(i));
+		for (Pair p: ruta) {
+			coste += this.getCellCost(p);
 		}
 		
 		return coste;
@@ -214,8 +231,8 @@ public class Board {
 	public Pair getBase() {
 		return this.base;
 	}
-	
+
 	public int getCosteBaseCam(int cam) {
-	    return this.costesBaseCam[cam];
+	    return this.costesBaseCam[cam - 1];
 	}
 }

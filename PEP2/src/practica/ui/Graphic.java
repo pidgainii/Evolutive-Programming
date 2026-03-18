@@ -169,6 +169,9 @@ public class Graphic extends JFrame {
                     practica.real.Chromosome best = (practica.real.Chromosome) bestObj;
                     txt.append("Best fitness: " + best.getFitness() + "\n");
                     txt.append("Best genes: " + best.getGenes().toString() + "\n");
+                    
+                    // TEST TEST TEST
+                    this.boardPanel.setChromosome(best);
                 });
 
             } catch (Exception ex) {

@@ -35,7 +35,7 @@ public class Fitness {
 	        int g = genes.get(i);
 
 	        // separador => cerrar dron (volver a base) y pasar al siguiente
-	        if (g >= num_camaras) {
+	        if (g > num_camaras) {
 	            if (prevCam != null) {
 	                int costBack = board.getCosteBaseCam(prevCam);
 	                costes_dron.set(current_dron,
@@ -63,7 +63,7 @@ public class Fitness {
 	        }
 
 	        // segmento normal prevCam -> cam
-	        int costSeg = this.board.getCoste(prevCam, cam);
+	        int costSeg = this.board.getCoste(prevCam - 1, cam - 1);
 	        costes_dron.set(current_dron,
 	                costes_dron.get(current_dron) + costSeg / dron_velocity[current_dron]);
 	        prevCam = cam;

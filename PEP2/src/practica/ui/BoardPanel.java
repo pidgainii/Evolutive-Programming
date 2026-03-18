@@ -3,12 +3,15 @@ package practica.ui;
 import javax.swing.*;
 
 import practica.real.Board;
+import practica.real.Chromosome;
 import practica.real.Pair;
 import java.awt.*;
 import java.util.ArrayList;
 
 public class BoardPanel extends JPanel {
     private Board board;
+    private Chromosome chromosome;
+    private ArrayList<ArrayList<Pair>> routes;
 
     public BoardPanel(Board board) {
     	this.board = board;
@@ -19,6 +22,14 @@ public class BoardPanel extends JPanel {
         this.board = board;
         repaint();
     }
+    
+    public void setChromosome(Chromosome chromosome) {
+    	this.chromosome = chromosome;
+    	this.routes = getDrawableRoutes(chromosome);
+    	repaint();
+    }
+    
+    
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -91,5 +102,65 @@ public class BoardPanel extends JPanel {
                 g.drawString(idText, tx, ty);
             }
         }
+    }
+    
+    
+    
+    private ArrayList<ArrayList<Pair>> getDrawableRoutes(Chromosome chromosome) {
+
+        ArrayList<ArrayList<Pair>> allRoutes = new ArrayList<>();
+        if (chromosome == null) return allRoutes;
+
+        ArrayList<Integer> genes = chromosome.getGenes();
+        int numCams = board.getNumCamaras();
+
+        ArrayList<Integer> currentCams = new ArrayList<>();
+
+        for (int g : genes) {
+
+            // Separator → close current drone route
+            if (g > numCams) {
+
+                allRoutes.add(buildRoute(currentCams));
+                currentCams.clear();
+
+            } else {
+                currentCams.add(g);																		
+            }
+        }
+
+        // last drone
+        allRoutes.add(buildRoute(currentCams));
+
+        return allRoutes;
+    }
+
+    private ArrayList<Pair> buildRoute(ArrayList<Integer> cams) {
+
+        ArrayList<Pair> route = new ArrayList<>();
+
+        if (cams.size() == 0) return route;
+
+        // Optional: start from base → first camera
+        Pair base = board.getBase();
+        Pair firstCam = board.getCamaraById(cams.get(0));
+        route.addAll(board.getRoute(
+            board.getCamaras().indexOf(firstCam),
+            board.getCamaras().indexOf(firstCam)
+        ));
+
+        // Between cameras
+        for (int i = 0; i < cams.size() - 1; i++) {
+
+            int c1 = cams.get(i) - 1;     // to 0-based
+            int c2 = cams.get(i + 1) - 1;
+
+            ArrayList<Pair> segment = board.getRoute(c1, c2);
+            if (segment != null) {
+                route.addAll(segment);
+            }
+        }
+
+        return route;
     }
 }
