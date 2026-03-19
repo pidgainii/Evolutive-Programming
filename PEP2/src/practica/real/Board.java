@@ -32,6 +32,7 @@ public class Board {
 	
 	private Pair base;
 	private int[] costesBaseCam;
+	private ArrayList<Pair>[] routesBaseCam;
 	
 	public Board(int[][] map, int seed, int numCamaras) {
 		this.map = map;
@@ -103,20 +104,25 @@ public class Board {
 		        costes[j][i] = coste;
 		    }
 		}
-
+		
+		this.routesBaseCam = new ArrayList[NUM_CAMARAS];
 		this.costesBaseCam = new int[NUM_CAMARAS];
 
-        for (int i = 0; i < NUM_CAMARAS; i++) {
-            Pair cam = posicionesCamaras.get(i);
+		for (int i = 0; i < NUM_CAMARAS; i++) {
+		    Pair cam = posicionesCamaras.get(i);
 
-            ArrayList<Pair> rutaBaseCam = AStar.a_star(this.map, this.base, cam, setPosicionesCamaras);
+		    ArrayList<Pair> path = AStar.a_star(this.map, this.base, cam, setPosicionesCamaras);
 
+		    this.routesBaseCam[i] = new ArrayList<>(path);
+		    this.routesBaseCam[i].remove(0); // remove base
+		    
             int coste = 0;
-    		for (Pair p: rutaBaseCam) {
+    		for (Pair p: path) {
     			coste += this.getCellCost(p);
     		}
             costesBaseCam[i] = coste;
-        }
+		}
+
 
 
 	}
@@ -234,5 +240,9 @@ public class Board {
 
 	public int getCosteBaseCam(int cam) {
 	    return this.costesBaseCam[cam - 1];
+	}
+	
+	public ArrayList<Pair> getRouteBaseCam(int camId1Based) {
+	    return routesBaseCam[camId1Based - 1];
 	}
 }

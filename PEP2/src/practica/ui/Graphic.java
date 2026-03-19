@@ -89,7 +89,7 @@ public class Graphic extends JFrame {
 
         btnRun.addActionListener(e -> run());
 
-        setSize(800,800);
+        setSize(1200,800);
         setLocationRelativeTo(null);
     }
     
@@ -280,35 +280,46 @@ public class Graphic extends JFrame {
         JPanel main = new JPanel(new BorderLayout(10,10));
         main.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
-        // Chart (top)
+        // ================= LEFT SIDE (chart + log) =================
+        JPanel leftSide = new JPanel();
+        leftSide.setLayout(new BoxLayout(leftSide, BoxLayout.Y_AXIS));
+        leftSide.setPreferredSize(new Dimension(400, 800));
+
+        // Chart
         ChartPanel chart = buildCenterChart();
-        chart.setPreferredSize(new Dimension(500,400));
+        chart.setPreferredSize(new Dimension(400, 300));
         chart.setBorder(BorderFactory.createTitledBorder("Evolution"));
 
-        // Log (middle small)
+        // Log
         txt.setEditable(false);
         txt.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
 
         JScrollPane log = new JScrollPane(txt);
-        log.setPreferredSize(new Dimension(500,100));
+        log.setPreferredSize(new Dimension(400, 150));
         log.setBorder(BorderFactory.createTitledBorder("Execution Log"));
 
-        // Board (bottom big square)
+        leftSide.add(chart);
+        leftSide.add(Box.createVerticalStrut(10));
+        leftSide.add(log);
+
+        // ================= RIGHT SIDE (BIG BOARD) =================
         JPanel boardContainer = new JPanel(new BorderLayout());
         boardContainer.setBorder(BorderFactory.createTitledBorder("Board"));
-        boardContainer.add(boardPanel);
-        boardContainer.setPreferredSize(new Dimension(500,400));
 
-        JPanel centerStack = new JPanel();
-        centerStack.setLayout(new BoxLayout(centerStack, BoxLayout.Y_AXIS));
+        boardPanel.setPreferredSize(new Dimension(800, 800)); // 🔥 BIG
+        boardContainer.add(boardPanel, BorderLayout.CENTER);
 
-        centerStack.add(chart);
-        centerStack.add(Box.createVerticalStrut(8));
-        centerStack.add(log);
-        centerStack.add(Box.createVerticalStrut(8));
-        centerStack.add(boardContainer);
+        // ================= SPLIT =================
+        JSplitPane split = new JSplitPane(
+                JSplitPane.HORIZONTAL_SPLIT,
+                leftSide,
+                boardContainer
+        );
 
-        main.add(centerStack, BorderLayout.CENTER);
+        split.setResizeWeight(0.3); // 30% left, 70% board
+        split.setDividerLocation(400);
+
+        main.add(split, BorderLayout.CENTER);
 
         return main;
     }

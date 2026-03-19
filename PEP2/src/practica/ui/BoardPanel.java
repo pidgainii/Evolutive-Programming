@@ -1,12 +1,12 @@
 package practica.ui;
 
 import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
 
 import practica.real.Board;
 import practica.real.Chromosome;
 import practica.real.Pair;
-import java.awt.*;
-import java.util.ArrayList;
 
 public class BoardPanel extends JPanel {
     private Board board;
@@ -14,22 +14,21 @@ public class BoardPanel extends JPanel {
     private ArrayList<ArrayList<Pair>> routes;
 
     public BoardPanel(Board board) {
-    	this.board = board;
-        setPreferredSize(new Dimension(300, 300));
+        this.board = board;
+        setPreferredSize(new Dimension(600, 600));
     }
 
     public void setBoard(Board board) {
         this.board = board;
         repaint();
     }
-    
+
     public void setChromosome(Chromosome chromosome) {
-    	this.chromosome = chromosome;
-    	this.routes = getDrawableRoutes(chromosome);
-    	repaint();
+        this.chromosome = chromosome;
+        this.routes = getDrawableRoutes(chromosome);
+        repaint();
     }
-    
-    
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -40,10 +39,10 @@ public class BoardPanel extends JPanel {
         int cw = getWidth() / cols;
         int ch = getHeight() / rows;
 
+        // Draw map cells
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 int v = board.getMap()[i][j];
-
                 Color color;
                 if (v == 0) color = Color.DARK_GRAY;
                 else if (v >= 20) color = new Color(255, 80, 80);
@@ -59,7 +58,7 @@ public class BoardPanel extends JPanel {
             }
         }
 
-        // 1) Dibujar la BASE en rojo (si existe)
+        // Draw base
         Pair base = board.getBase();
         if (base != null) {
             int bx = base.y() * cw;
@@ -67,12 +66,9 @@ public class BoardPanel extends JPanel {
 
             g.setColor(Color.RED);
             g.fillRect(bx, by, cw, ch);
-
-            // opcional: borde para que destaque
             g.setColor(Color.BLACK);
             g.drawRect(bx, by, cw, ch);
 
-            // opcional: una "B" encima
             g.setColor(Color.WHITE);
             String t = "B";
             FontMetrics fm = g.getFontMetrics();
@@ -81,113 +77,97 @@ public class BoardPanel extends JPanel {
             g.drawString(t, tx, ty);
         }
 
-        // 2) Dibujar cámaras (círculos azules) + su ID (1..N)
+        // Draw cameras
         ArrayList<Pair> camaras = board.getCamaras();
         if (camaras != null) {
-            for (int idx0 = 0; idx0 < camaras.size(); idx0++) {
-                Pair p = camaras.get(idx0);
-
-                int x = p.y() * cw; // column
-                int y = p.x() * ch; // row
+            for (int idx = 0; idx < camaras.size(); idx++) {
+                Pair p = camaras.get(idx);
+                int x = p.y() * cw;
+                int y = p.x() * ch;
 
                 g.setColor(Color.BLUE);
-                g.fillOval(x + cw/4, y + ch/4, cw/2, ch/2);
+                int diameter = Math.min(cw, ch) / 2;
+                int cx = x + (cw - diameter) / 2;
+                int cy = y + (ch - diameter) / 2;
+                g.fillOval(cx, cy, diameter, diameter);
 
-                String idText = String.valueOf(idx0 + 1);
                 g.setColor(Color.WHITE);
-
+                String idText = String.valueOf(idx + 1);
                 FontMetrics fm = g.getFontMetrics();
                 int tx = x + (cw - fm.stringWidth(idText)) / 2;
                 int ty = y + (ch + fm.getAscent()) / 2 - 2;
                 g.drawString(idText, tx, ty);
             }
         }
-        
-        // 3) Draw routes
+
+        // Draw drone routes
         if (routes != null) {
             Graphics2D g2 = (Graphics2D) g;
-            g2.setStroke(new BasicStroke(2)); // thicker lines
+            g2.setStroke(new BasicStroke(2));
 
             Color[] colors = {Color.GREEN, Color.MAGENTA, Color.CYAN, Color.ORANGE, Color.PINK};
 
             for (int r = 0; r < routes.size(); r++) {
                 ArrayList<Pair> route = routes.get(r);
-                if (route.size() < 2) continue;
+                if (route.isEmpty()) continue;
 
                 g2.setColor(colors[r % colors.length]);
 
-                for (int i = 0; i < route.size() - 1; i++) {
-                    Pair p1 = route.get(i);
-                    Pair p2 = route.get(i + 1);
-
-                    int x1 = p1.y() * cw + cw / 2;
-                    int y1 = p1.x() * ch + ch / 2;
-
-                    int x2 = p2.y() * cw + cw / 2;
-                    int y2 = p2.x() * ch + ch / 2;
-
+                Pair prev = base; // always start from base
+                for (Pair p : route) {
+                    int x1 = prev.y() * cw + cw / 2;
+                    int y1 = prev.x() * ch + ch / 2;
+                    int x2 = p.y() * cw + cw / 2;
+                    int y2 = p.x() * ch + ch / 2;
                     g2.drawLine(x1, y1, x2, y2);
+                    prev = p;
                 }
             }
         }
     }
-    
-    
-    
-    private ArrayList<ArrayList<Pair>> getDrawableRoutes(Chromosome chromosome) {
 
+    // Build routes including return to base using real paths
+    private ArrayList<ArrayList<Pair>> getDrawableRoutes(Chromosome chromosome) {
         ArrayList<ArrayList<Pair>> allRoutes = new ArrayList<>();
         if (chromosome == null) return allRoutes;
 
         ArrayList<Integer> genes = chromosome.getGenes();
         int numCams = board.getNumCamaras();
-
-        ArrayList<Integer> currentCams = new ArrayList<>();
+        ArrayList<Integer> currentDrone = new ArrayList<>();
 
         for (int g : genes) {
-
-            // Separator → close current drone route
-            if (g > numCams) {
-
-                allRoutes.add(buildRoute(currentCams));
-                currentCams.clear();
-
+            if (g > numCams) { // separator → new drone
+                allRoutes.add(buildRoute(currentDrone));
+                currentDrone.clear();
             } else {
-                currentCams.add(g);																		
+                currentDrone.add(g);
             }
         }
 
         // last drone
-        allRoutes.add(buildRoute(currentCams));
+        allRoutes.add(buildRoute(currentDrone));
 
         return allRoutes;
     }
 
     private ArrayList<Pair> buildRoute(ArrayList<Integer> cams) {
-
         ArrayList<Pair> route = new ArrayList<>();
+        if (cams.isEmpty()) return route;
 
-        if (cams.size() == 0) return route;
+        // base → first camera
+        route.addAll(board.getRouteBaseCam(cams.get(0)));
 
-        // Optional: start from base → first camera
-        Pair base = board.getBase();
-        Pair firstCam = board.getCamaraById(cams.get(0));
-        route.addAll(board.getRoute(
-            board.getCamaras().indexOf(firstCam),
-            board.getCamaras().indexOf(firstCam)
-        ));
-
-        // Between cameras
+        // between cameras
         for (int i = 0; i < cams.size() - 1; i++) {
-
-            int c1 = cams.get(i) - 1;     // to 0-based
+            int c1 = cams.get(i) - 1;
             int c2 = cams.get(i + 1) - 1;
-
-            ArrayList<Pair> segment = board.getRoute(c1, c2);
-            if (segment != null) {
-                route.addAll(segment);
-            }
+            route.addAll(board.getRoute(c1, c2));
         }
+
+        // last camera → base (reverse base→camera path)
+        ArrayList<Pair> backToBase = new ArrayList<>(board.getRouteBaseCam(cams.get(cams.size() - 1)));
+        java.util.Collections.reverse(backToBase);
+        route.addAll(backToBase);
 
         return route;
     }
