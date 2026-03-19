@@ -34,15 +34,24 @@ public class BoardPanel extends JPanel {
         super.paintComponent(g);
         if (board == null) return;
 
-        int rows = board.getMap().length;
-        int cols = board.getMap()[0].length;
-        int cw = getWidth() / cols;
-        int ch = getHeight() / rows;
+        int[][] map = board.getMap();
+        int rows = map.length;
+        int cols = map[0].length;
+
+        // cell size = square
+        int cell = Math.min(getWidth() / cols, getHeight() / rows);
+        if (cell <= 0) return;
+
+        // center the board
+        int boardW = cell * cols;
+        int boardH = cell * rows;
+        int offX = (getWidth() - boardW) / 2;
+        int offY = (getHeight() - boardH) / 2;
 
         // Draw map cells
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                int v = board.getMap()[i][j];
+                int v = map[i][j];
                 Color color;
                 if (v == 0) color = Color.DARK_GRAY;
                 else if (v >= 20) color = new Color(255, 80, 80);
@@ -51,29 +60,32 @@ public class BoardPanel extends JPanel {
                 else if (v >= 5)  color = new Color(220, 220, 220);
                 else              color = Color.WHITE;
 
+                int px = offX + j * cell;
+                int py = offY + i * cell;
+
                 g.setColor(color);
-                g.fillRect(j * cw, i * ch, cw, ch);
+                g.fillRect(px, py, cell, cell);
                 g.setColor(Color.BLACK);
-                g.drawRect(j * cw, i * ch, cw, ch);
+                g.drawRect(px, py, cell, cell);
             }
         }
 
         // Draw base
         Pair base = board.getBase();
         if (base != null) {
-            int bx = base.y() * cw;
-            int by = base.x() * ch;
+            int bx = offX + base.y() * cell;
+            int by = offY + base.x() * cell;
 
             g.setColor(Color.RED);
-            g.fillRect(bx, by, cw, ch);
+            g.fillRect(bx, by, cell, cell);
             g.setColor(Color.BLACK);
-            g.drawRect(bx, by, cw, ch);
+            g.drawRect(bx, by, cell, cell);
 
             g.setColor(Color.WHITE);
             String t = "B";
             FontMetrics fm = g.getFontMetrics();
-            int tx = bx + (cw - fm.stringWidth(t)) / 2;
-            int ty = by + (ch + fm.getAscent()) / 2 - 2;
+            int tx = bx + (cell - fm.stringWidth(t)) / 2;
+            int ty = by + (cell + fm.getAscent()) / 2 - 2;
             g.drawString(t, tx, ty);
         }
 
@@ -82,26 +94,27 @@ public class BoardPanel extends JPanel {
         if (camaras != null) {
             for (int idx = 0; idx < camaras.size(); idx++) {
                 Pair p = camaras.get(idx);
-                int x = p.y() * cw;
-                int y = p.x() * ch;
+
+                int x = offX + p.y() * cell;
+                int y = offY + p.x() * cell;
 
                 g.setColor(Color.BLUE);
-                int diameter = Math.min(cw, ch) / 2;
-                int cx = x + (cw - diameter) / 2;
-                int cy = y + (ch - diameter) / 2;
+                int diameter = cell / 2;
+                int cx = x + (cell - diameter) / 2;
+                int cy = y + (cell - diameter) / 2;
                 g.fillOval(cx, cy, diameter, diameter);
 
                 g.setColor(Color.WHITE);
                 String idText = String.valueOf(idx + 1);
                 FontMetrics fm = g.getFontMetrics();
-                int tx = x + (cw - fm.stringWidth(idText)) / 2;
-                int ty = y + (ch + fm.getAscent()) / 2 - 2;
+                int tx = x + (cell - fm.stringWidth(idText)) / 2;
+                int ty = y + (cell + fm.getAscent()) / 2 - 2;
                 g.drawString(idText, tx, ty);
             }
         }
 
         // Draw drone routes
-        if (routes != null) {
+        if (routes != null && base != null) {
             Graphics2D g2 = (Graphics2D) g;
             g2.setStroke(new BasicStroke(2));
 
@@ -115,10 +128,10 @@ public class BoardPanel extends JPanel {
 
                 Pair prev = base; // always start from base
                 for (Pair p : route) {
-                    int x1 = prev.y() * cw + cw / 2;
-                    int y1 = prev.x() * ch + ch / 2;
-                    int x2 = p.y() * cw + cw / 2;
-                    int y2 = p.x() * ch + ch / 2;
+                    int x1 = offX + prev.y() * cell + cell / 2;
+                    int y1 = offY + prev.x() * cell + cell / 2;
+                    int x2 = offX + p.y() * cell + cell / 2;
+                    int y2 = offY + p.x() * cell + cell / 2;
                     g2.drawLine(x1, y1, x2, y2);
                     prev = p;
                 }
@@ -129,7 +142,7 @@ public class BoardPanel extends JPanel {
     // Build routes including return to base using real paths
     private ArrayList<ArrayList<Pair>> getDrawableRoutes(Chromosome chromosome) {
         ArrayList<ArrayList<Pair>> allRoutes = new ArrayList<>();
-        if (chromosome == null) return allRoutes;
+        if (chromosome == null || board == null) return allRoutes;
 
         ArrayList<Integer> genes = chromosome.getGenes();
         int numCams = board.getNumCamaras();

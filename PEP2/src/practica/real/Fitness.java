@@ -1,98 +1,86 @@
 package practica.real;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Set;
-
-
+import java.util.Arrays;
 
 public class Fitness {
 
-	private final Board board;
+    private final Board board;
+    private final int numDrones;
 
+    public Fitness(Board board, int numDrones) {
+        this.board = board;
+        this.numDrones = Math.max(1, Math.min(5, numDrones));
+    }
 
-	// Ahora fitness acepta un board, no un map
-	public Fitness(Board board) {
-		this.board = board;
-	}
+    public double evaluate(Chromosome individual) {
+        return evaluateBreakdown(individual).fitness();
+    }
 
-	public double evaluate(Chromosome individual) {
+    public FitnessBreakdown evaluateBreakdown(Chromosome individual) {
 
-	    ArrayList<Integer> genes = individual.getGenes();
+        ArrayList<Integer> genes = individual.getGenes();
 
-	    ArrayList<Double> costes_dron = new ArrayList<>();
-	    costes_dron.add(0.0);
+        double[] times = new double[numDrones];
 
-	    int current_dron = 0;
-	    double[] dron_velocity = {1.5, 1.0, 0.7, 1.2, 0.5};
+        int current_dron = 0;
 
-	    int num_camaras = this.board.getNumCamaras();
+        double[] dron_velocity_all = {1.5, 1.0, 0.7, 1.2, 0.5};
+        double[] dron_velocity = Arrays.copyOf(dron_velocity_all, numDrones);
 
-	    Integer prevCam = null; // última cámara del dron actual (para segmentos y para volver a base)
-	    boolean started = false; // si este dron ya ha salido de base
+        int num_camaras = this.board.getNumCamaras();
 
-	    for (int i = 0; i < genes.size(); i++) {
-	        int g = genes.get(i);
+        Integer prevCam = null;
+        boolean started = false;
 
-	        // separador => cerrar dron (volver a base) y pasar al siguiente
-	        if (g > num_camaras) {
-	            if (prevCam != null) {
-	                int costBack = board.getCosteBaseCam(prevCam);
-	                costes_dron.set(current_dron,
-	                        costes_dron.get(current_dron) + costBack / dron_velocity[current_dron]);
-	            }
+        for (int g : genes) {
 
-	            current_dron++;
-	            costes_dron.add(0.0);
-	            prevCam = null;
-	            started = false;
-	            continue;
-	        }
+            // separador => cerrar dron y pasar al siguiente
+            if (g > num_camaras) {
+                if (prevCam != null) {
+                    int costBack = board.getCosteBaseCam(prevCam);
+                    times[current_dron] += costBack / dron_velocity[current_dron];
+                }
 
-	        // gen es cámara
-	        int cam = g;
+                current_dron++;
+                if (current_dron >= numDrones) break;
 
-	        // primera cámara del dron: base -> cam
-	        if (!started) {
-	            int costOut = board.getCosteBaseCam(cam);
-	            costes_dron.set(current_dron,
-	                    costes_dron.get(current_dron) + costOut / dron_velocity[current_dron]);
-	            started = true;
-	            prevCam = cam;
-	            continue;
-	        }
+                prevCam = null;
+                started = false;
+                continue;
+            }
 
-	        // segmento normal prevCam -> cam
-	        int costSeg = this.board.getCoste(prevCam - 1, cam - 1);
-	        costes_dron.set(current_dron,
-	                costes_dron.get(current_dron) + costSeg / dron_velocity[current_dron]);
-	        prevCam = cam;
-	    }
+            // cámara
+            int cam = g;
 
-	    // cerrar último dron (volver a base)
-	    if (prevCam != null) {
-	        int costBack = board.getCosteBaseCam(prevCam);
-	        costes_dron.set(current_dron,
-	                costes_dron.get(current_dron) + costBack / dron_velocity[current_dron]);
-	    }
+            if (!started) {
+                int costOut = board.getCosteBaseCam(cam);
+                times[current_dron] += costOut / dron_velocity[current_dron];
+                started = true;
+                prevCam = cam;
+                continue;
+            }
 
-	    double maxT = Collections.max(costes_dron);
-	    double minT = Collections.min(costes_dron);
-	    double penalizacionDesequilibrio = (maxT - minT) * 0.5;
-	    double time = maxT + penalizacionDesequilibrio;
+            int costSeg = this.board.getCoste(prevCam - 1, cam - 1);
+            times[current_dron] += costSeg / dron_velocity[current_dron];
+            prevCam = cam;
+        }
 
-	    return time;
-	}
-	
+        // cerrar último dron si aplica
+        if (current_dron < numDrones && prevCam != null) {
+            int costBack = board.getCosteBaseCam(prevCam);
+            times[current_dron] += costBack / dron_velocity[current_dron];
+        }
+
+        double maxT = times[0], minT = times[0];
+        for (int i = 1; i < times.length; i++) {
+            if (times[i] > maxT) maxT = times[i];
+            if (times[i] < minT) minT = times[i];
+        }
+
+        double penalty = (maxT - minT) * 0.5;
+        double fitness = maxT + penalty;
+
+        return new FitnessBreakdown(times, fitness);
+    }
 }
-
-
-
-
-
-
-
-
-
-
-

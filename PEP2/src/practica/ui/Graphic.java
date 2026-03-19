@@ -9,7 +9,11 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import java.awt.BasicStroke;
-
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Arrays;
@@ -18,6 +22,7 @@ import practica.real.Pair;
 import practica.GARunner;
 import practica.Maps;
 import practica.real.Board;
+import practica.real.Chromosome;
 
 
 
@@ -33,9 +38,9 @@ public class Graphic extends JFrame {
     private final JSpinner spNCam  = new JSpinner(new SpinnerNumberModel(40, 0, 50, 1));
     private final JSpinner spNDrones  = new JSpinner(new SpinnerNumberModel(3, 0, 5, 1));
 
-    private final JComboBox<String> selMethod = new JComboBox<>(new String[]{"ROULETTE", "TOURNAMENT", "STOCHASTIC", "TRUNCATION", "REMAINDERS"});
-    private final JComboBox<String> crossMethod = new JComboBox<>(new String[]{"ONE_POINT", "UNIFORM", "ARITHMETIC", "BLX_ALPHA"});
-    private final JComboBox<String> mutMethod = new JComboBox<>(new String[]{"GAUSSIAN", "GENE"});
+    private final JComboBox<String> selMethod = new JComboBox<>(new String[]{"ROULETTE", "TOURNAMENT", "STOCHASTIC", "TRUNCATION", "REMAINDERS", "RANKING"});
+    private final JComboBox<String> crossMethod = new JComboBox<>(new String[]{"PMX", "OX", "OXPP", "CX", "CO", "ERX"});
+    private final JComboBox<String> mutMethod = new JComboBox<>(new String[]{"INSERTION", "SWAP", "INVERSION", "HEURISTIC", "BALANCE_MOVE"});
     private final JSpinner spElit = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 1.0, 0.05));
     private final JSpinner spSeed = new JSpinner(
             new SpinnerNumberModel(3000, 0, Integer.MAX_VALUE, 1)
@@ -43,7 +48,7 @@ public class Graphic extends JFrame {
 
     private final JButton btnRun = new JButton("Run");
     private final JLabel lblBest = new JLabel("Best: -");
-    private final JTextArea txt = new JTextArea(6, 30);
+    private final JTextPane txt = new JTextPane();
 
     // series para la gráfica (IMPORTANT: allowDuplicateXValues=true)
     private final XYSeries sBestGen = new XYSeries("Mejor gen (rojo)", false, true);
@@ -126,6 +131,7 @@ public class Graphic extends JFrame {
         double elit = (Double) spElit.getValue();
         int seed = (Integer) spSeed.getValue();
         int num_camaras = (Integer) spNCam.getValue();
+        int num_drones = (Integer) spNDrones.getValue();
 
         String selectionMethod = (String) selMethod.getSelectedItem();
         String crossoverMethod = (String) crossMethod.getSelectedItem();
@@ -160,7 +166,7 @@ public class Graphic extends JFrame {
         new Thread(() -> {
             try {
 
-                GAResult result = GARunner.run(board, popSize, gens, pc, pm, elit, selectionMethod, crossoverMethod, mutationMethod, listener);
+                GAResult result = GARunner.run(board, popSize, gens, pc, pm, elit, selectionMethod, crossoverMethod, mutationMethod, num_drones, listener);
                 		
                 		
                 Object bestObj = result.getBest();
@@ -170,8 +176,12 @@ public class Graphic extends JFrame {
                     cbScenario.setEnabled(true);
 
                     practica.real.Chromosome best = (practica.real.Chromosome) bestObj;
-                    txt.append("Best fitness: " + best.getFitness() + "\n");
-                    txt.append("Best genes: " + best.getGenes().toString() + "\n");
+
+                    clearLog();
+                    append("Makespan: " + best.getFitness() + "\n");
+                    append("Semilla: " + seed + "\n");
+                    printColoredDroneTimes(best, num_drones);
+                    printColoredChromosome(best);
                     
                     // TEST TEST TEST
                     this.boardPanel.setChromosome(best);
@@ -363,13 +373,75 @@ public class Graphic extends JFrame {
    
     
     
+    private void clearLog() {
+        txt.setText("");
+    }
+
+    private void append(String s) {
+        try {
+            StyledDocument doc = txt.getStyledDocument();
+            doc.insertString(doc.getLength(), s, null);
+        } catch (BadLocationException ignored) {}
+    }
+
+    private void appendColored(String s, Color color, boolean bold) {
+        try {
+            StyledDocument doc = txt.getStyledDocument();
+            SimpleAttributeSet attrs = new SimpleAttributeSet();
+            StyleConstants.setForeground(attrs, color);
+            StyleConstants.setBold(attrs, bold);
+            doc.insertString(doc.getLength(), s, attrs);
+        } catch (BadLocationException ignored) {}
+    }
     
     
+    private void printColoredChromosome(Chromosome best) {
+        if (best == null || board == null) return;
+
+        int numCams = board.getNumCamaras();
+        Color[] colors = {Color.GREEN, Color.MAGENTA, Color.CYAN, Color.ORANGE, Color.PINK};
+
+        append("\n--- Best chromosome ---\n");
+
+        int drone = 0;
+        for (int g : best.getGenes()) {
+            if (g > numCams) {
+                // separador
+                appendColored(" | ", Color.DARK_GRAY, true);
+                drone++;
+                continue;
+            }
+
+            Color c = colors[Math.min(drone, colors.length - 1)];
+            appendColored(String.valueOf(g), c, true);
+            append(" ");
+        }
+        append("\n");
+    }
     
     
-    
-    
-    
+    private void printColoredDroneTimes(practica.real.Chromosome best, int num_drones) {
+        practica.real.Fitness fitnessDbg = new practica.real.Fitness(this.board, num_drones);
+        practica.real.FitnessBreakdown bd = fitnessDbg.evaluateBreakdown(best);
+
+        Color[] colors = {Color.GREEN, Color.MAGENTA, Color.CYAN, Color.ORANGE, Color.PINK};
+        double[] vAll = {1.5, 1.0, 0.7, 1.2, 0.5};
+
+        append("\nTiempos por dron: ");
+
+        for (int i = 0; i < bd.timesPerDrone().length; i++) {
+            Color c = colors[i % colors.length];
+            double vel = vAll[i];
+
+            String part = String.format("D%d(x%.1f): %.3f", i + 1, vel, bd.timesPerDrone()[i]);
+            appendColored(part, c, true);
+
+            if (i < bd.timesPerDrone().length - 1) {
+                appendColored(" | ", Color.DARK_GRAY, true);
+            }
+        }
+        append("\n");
+    }
     
     
     

@@ -1,6 +1,8 @@
 package practica.real;
 
 import practica.enums.SelectionMethod;
+import practica.enums.CrossoverMethod;
+import practica.enums.MutationMethod;
 import practica.ui.EvolutionListener;
 import practica.ui.GAResult;
 
@@ -61,6 +63,10 @@ public class Evolution {
                                        Population population,
                                        double elitismRate,
                                        String selectionMethodString,
+                                       double pc,
+                                       String crossoverMethodString,
+                                       double pm, 
+                                       String mutationMethodString,
                                        EvolutionListener listener) {
 
         this.globalBest = population.getPopulation().get(0).clone();
@@ -89,6 +95,26 @@ public class Evolution {
             // 3) reinsertar élite al principio
             for (int i = 0; i < elite.size(); i++) {
                 newPopulation.swap(i, elite.get(i));
+            }
+            
+            CrossoverMethod crossMethod = CrossoverMethod.valueOf(crossoverMethodString);
+            for (int i = eliteCount; i + 1 < population_size; i += 2) {
+                if (rand.nextDouble() < pc) {
+                    Chromosome p1 = newPopulation.getPopulation().get(i);
+                    Chromosome p2 = newPopulation.getPopulation().get(i + 1);
+
+                    Chromosome[] kids = Crossover.cross(crossMethod, p1, p2, rand);
+
+                    newPopulation.swap(i, kids[0]);
+                    newPopulation.swap(i + 1, kids[1]);
+                }
+            }
+            
+            MutationMethod mutMethod = MutationMethod.valueOf(mutationMethodString);
+
+            // tras el bucle de cruce:
+            for (int i = eliteCount; i < population_size; i++) {
+                Mutation.mutate(mutMethod, newPopulation.getPopulation().get(i), rand, pm, fitness);
             }
 
             // 5) evaluar/normalizar
