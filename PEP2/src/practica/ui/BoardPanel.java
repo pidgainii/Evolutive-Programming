@@ -53,13 +53,17 @@ public class BoardPanel extends JPanel {
             for (int j = 0; j < cols; j++) {
                 int v = map[i][j];
                 Color color;
-                if (v == 0) color = Color.DARK_GRAY;
-                else if (v >= 20) color = new Color(255, 80, 80);
-                else if (v >= 15) color = new Color(255, 140, 0);
-                else if (v >= 10) color = new Color(255, 215, 0);
-                else if (v >= 5)  color = new Color(220, 220, 220);
-                else              color = Color.WHITE;
-
+                if (v == 0) {
+                    color = Color.DARK_GRAY;                 // muro
+                } else if (v == 20) {
+                    color = new Color(255, 100, 100);        // rojo claro (light red)
+                } else if (v == 15) {
+                    color = new Color(255, 200, 230);        // rosa claro (light pink)
+                } else if (v == 5) {
+                    color = new Color(255, 255, 180);        // amarillo claro (light yellow)
+                } else {
+                    color = Color.WHITE;                     // suelo estándar (1 u otros)
+                }
                 int px = offX + j * cell;
                 int py = offY + i * cell;
 

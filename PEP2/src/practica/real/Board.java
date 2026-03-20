@@ -101,9 +101,9 @@ public class Board {
 		        // Le quitamos la primera
 		        this.routes[j][i].remove(0);
 		        
-		        int coste = this.costeDistancia(i, j);
-		        costes[i][j] = coste;
-		        costes[j][i] = coste;
+		        int coste1 = this.computeCost(routes[i][j]);
+		        costes[i][j] = coste1;
+		        costes[j][i] = coste1;
 		    }
 		}
 		
@@ -128,7 +128,7 @@ public class Board {
 		    this.routesCamBase[i] = new ArrayList<>(reversed);
 		    this.routesCamBase[i].remove(0); // remove first cam
 		    
-            costesCamBase[i] = computeCost(routesCamBase[i]);
+            costesCamBase[i] = costesBaseCam[i];
 
 		}
 
@@ -138,7 +138,8 @@ public class Board {
 	
 	private int computeCost(ArrayList<Pair> path) {
 	    int cost = 0;
-	    for (Pair p : path) {
+	    for (int i = 0; i < path.size() - 1; i++) {   // <- NO incluir destino
+	        Pair p = path.get(i);
 	        cost += this.getCellCost(p);
 	    }
 	    return cost;
@@ -205,23 +206,6 @@ public class Board {
 	    }
 
 	    return copy;
-	}
-	
-	private int costeDistancia(int camara1, int camara2) {
-
-		
-		int coste = 0;
-		
-		// funcion que nos devuelve la ruta de una camara a otra (sin pasar por muros)
-		ArrayList<Pair> ruta = this.getRoute(camara1, camara2);
-		
-		
-		// Vamos sumando el coste de cada celda
-		for (Pair p: ruta) {
-			coste += this.getCellCost(p);
-		}
-		
-		return coste;
 	}
 	
 	public Pair getCamaraById(int camId1Based) {

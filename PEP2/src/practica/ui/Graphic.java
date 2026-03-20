@@ -34,14 +34,14 @@ public class Graphic extends JFrame {
     private final JSpinner spPop = new JSpinner(new SpinnerNumberModel(100, 2, 5000, 10));
     private final JSpinner spGen = new JSpinner(new SpinnerNumberModel(200, 1, 100000, 10));
     private final JSpinner spPc  = new JSpinner(new SpinnerNumberModel(0.60, 0.0, 1.0, 0.01));
-    private final JSpinner spPm  = new JSpinner(new SpinnerNumberModel(0.05, 0.0, 1.0, 0.001));
+    private final JSpinner spPm  = new JSpinner(new SpinnerNumberModel(0.1, 0.0, 1.0, 0.001));
     private final JSpinner spNCam  = new JSpinner(new SpinnerNumberModel(40, 0, 50, 1));
     private final JSpinner spNDrones  = new JSpinner(new SpinnerNumberModel(3, 0, 5, 1));
 
     private final JComboBox<String> selMethod = new JComboBox<>(new String[]{"ROULETTE", "TOURNAMENT", "STOCHASTIC", "TRUNCATION", "REMAINDERS", "RANKING"});
     private final JComboBox<String> crossMethod = new JComboBox<>(new String[]{"PMX", "OX", "OXPP", "CX", "CO", "ERX"});
     private final JComboBox<String> mutMethod = new JComboBox<>(new String[]{"INSERTION", "SWAP", "INVERSION", "HEURISTIC", "BALANCE_MOVE"});
-    private final JSpinner spElit = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 1.0, 0.05));
+    private final JSpinner spElit = new JSpinner(new SpinnerNumberModel(0.15, 0.0, 1.0, 0.05));
     private final JSpinner spSeed = new JSpinner(
             new SpinnerNumberModel(3000, 0, Integer.MAX_VALUE, 1)
     );
@@ -76,12 +76,13 @@ public class Graphic extends JFrame {
     public Graphic() {
     	super("Práctica 2");
     	
-    	this.map = Maps.MAP1;
-
+    	this.map = Maps.MAP3;
+    	cbScenario.setSelectedIndex(2); 
+    	
         int seed = (Integer) spSeed.getValue();
         int num_camaras = (Integer) spNCam.getValue();
 
-        board = new Board(Maps.MAP1, seed, num_camaras);
+        board = new Board(this.map, seed, num_camaras);
         boardPanel = new BoardPanel(board);
 
         cbScenario.addActionListener(e -> changeScenario());
