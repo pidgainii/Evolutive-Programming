@@ -61,7 +61,7 @@ public class Fitness {
                 continue;
             }
 
-            int costSeg = this.board.getCoste(prevCam - 1, cam - 1);
+            int costSeg = this.board.getCoste(prevCam, cam);
             times[current_dron] += costSeg / dron_velocity[current_dron];
             prevCam = cam;
         }

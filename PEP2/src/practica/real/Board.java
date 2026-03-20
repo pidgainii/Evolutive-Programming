@@ -152,7 +152,7 @@ public class Board {
 	}
 	
 	public int getCoste(int i, int j) {
-		return costes[i][j];
+		return costes[i-1][j-1];
 	}
 	
 	public Pair getCamara(int index) {

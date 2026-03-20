@@ -36,8 +36,6 @@ public class Evolution {
     		if (localBest == null || individual.getFitness() < localBest.getFitness()) {
     			localBest = individual;
     		}
-    		
-    		sumScores += individual.getFitness();
     	}
     	
     	// actualizar global fitness
@@ -45,14 +43,24 @@ public class Evolution {
     		this.globalBest = localBest.clone();
     	}
     	
-        double accumulated = 0.0;
-        for (Chromosome individual : population.getPopulation()) {
-            double rel = individual.getFitness() / sumScores;
-            accumulated += rel;
+    	double maxFitness = population.getPopulation().stream()
+    	        .mapToDouble(Chromosome::getFitness)
+    	        .max().orElse(1.0);
 
-            individual.setRelative_fitness(rel);
-            individual.setAcum_fitness(accumulated);
-        }
+    	// recompute sum using inverted scores
+    	double sumScoresInv = 0.0;
+    	for (Chromosome individual : population.getPopulation()) {
+    	    sumScoresInv += (maxFitness - individual.getFitness());
+    	}
+
+    	double accumulated = 0.0;
+    	for (Chromosome individual : population.getPopulation()) {
+    	    double rel = (maxFitness - individual.getFitness()) / sumScoresInv;
+    	    accumulated += rel;
+
+    	    individual.setRelative_fitness(rel);
+    	    individual.setAcum_fitness(accumulated);
+    	}
 
         // force exact 1.0 to prevent pointer overflow in roulette/SUS
         population.getPopulation().get(population.getPopulation().size() - 1).setAcum_fitness(1.0);

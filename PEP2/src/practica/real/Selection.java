@@ -185,8 +185,9 @@ public class Selection {
 			sum = 1.0;
 		} else {
 			for (int i = 0; i < n; i++) {
-				p[i] = ((2.0 - s) / n) + (2.0 * i * (s - 1.0) / (n * (n - 1.0)));
-				sum += p[i];
+			    int rank = n - 1 - i; // invert: best individual gets highest rank
+			    p[i] = ((2.0 - s) / n) + (2.0 * rank * (s - 1.0) / (n * (n - 1.0)));
+			    sum += p[i];
 			}
 		}
 
