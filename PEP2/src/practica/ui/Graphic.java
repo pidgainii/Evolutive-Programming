@@ -183,7 +183,6 @@ public class Graphic extends JFrame {
                     printColoredDroneTimes(best, num_drones);
                     printColoredChromosome(best);
                     
-                    // TEST TEST TEST
                     this.boardPanel.setChromosome(best);
                 });
 

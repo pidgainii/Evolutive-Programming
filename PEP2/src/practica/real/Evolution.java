@@ -113,6 +113,20 @@ public class Evolution {
 
                     Chromosome[] kids = Crossover.cross(crossMethod, p1, p2, rand);
 
+                    // MEMETIC (10%) applied to children
+                    for (int k = 0; k < kids.length; k++) {
+                        if (rand.nextDouble() < 0.10) {
+                            Chromosome improved = twoOptLocalSearch(kids[k], rand);
+
+                            double fOld = fitness.evaluate(kids[k]);
+                            double fNew = fitness.evaluate(improved);
+
+                            if (fNew < fOld) {
+                                kids[k] = improved;
+                            }
+                        }
+                    }
+
                     newPopulation.swap(i, kids[0]);
                     newPopulation.swap(i + 1, kids[1]);
                 }
@@ -169,5 +183,34 @@ public class Evolution {
             elite.add(list.get(i).clone());
         }
         return elite;
+    }
+    
+    private Chromosome twoOptLocalSearch(Chromosome ind, Random rand) {
+        ArrayList<Integer> genes = new ArrayList<>(ind.getGenes());
+        int n = genes.size();
+
+        // pick two positions
+        int i = rand.nextInt(n);
+        int k = rand.nextInt(n);
+
+        if (i > k) {
+            int tmp = i;
+            i = k;
+            k = tmp;
+        }
+
+        // avoid trivial cases
+        if (k - i < 2) return ind.clone();
+
+        // 2-opt: reverse sublist
+        while (i < k) {
+            int temp = genes.get(i);
+            genes.set(i, genes.get(k));
+            genes.set(k, temp);
+            i++;
+            k--;
+        }
+
+        return new Chromosome(genes);
     }
 }
