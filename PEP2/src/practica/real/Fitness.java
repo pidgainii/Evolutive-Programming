@@ -38,7 +38,7 @@ public class Fitness {
             // separador => cerrar dron y pasar al siguiente
             if (g > num_camaras) {
                 if (prevCam != null) {
-                    int costBack = board.getCosteBaseCam(prevCam);
+                    int costBack = board.getCosteCamBase(prevCam);
                     times[current_dron] += costBack / dron_velocity[current_dron];
                 }
 
@@ -68,7 +68,7 @@ public class Fitness {
 
         // cerrar último dron si aplica
         if (current_dron < numDrones && prevCam != null) {
-            int costBack = board.getCosteBaseCam(prevCam);
+            int costBack = board.getCosteCamBase(prevCam);
             times[current_dron] += costBack / dron_velocity[current_dron];
         }
 

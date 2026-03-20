@@ -178,9 +178,8 @@ public class BoardPanel extends JPanel {
         }
 
         // last camera → base (reverse base→camera path)
-        ArrayList<Pair> backToBase = new ArrayList<>(board.getRouteBaseCam(cams.get(cams.size() - 1)));
-        java.util.Collections.reverse(backToBase);
-        route.addAll(backToBase);
+        route.addAll(board.getRouteCamBase(cams.get(cams.size() - 1)));
+
 
         return route;
     }

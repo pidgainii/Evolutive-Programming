@@ -32,7 +32,9 @@ public class Board {
 	
 	private Pair base;
 	private int[] costesBaseCam;
+	private int[] costesCamBase;
 	private ArrayList<Pair>[] routesBaseCam;
+	private ArrayList<Pair>[] routesCamBase;
 	
 	public Board(int[][] map, int seed, int numCamaras) {
 		this.map = map;
@@ -107,7 +109,9 @@ public class Board {
 		
 		this.routesBaseCam = new ArrayList[NUM_CAMARAS];
 		this.costesBaseCam = new int[NUM_CAMARAS];
-
+		this.routesCamBase= new ArrayList[NUM_CAMARAS];
+		this.costesCamBase = new int[NUM_CAMARAS];
+		
 		for (int i = 0; i < NUM_CAMARAS; i++) {
 		    Pair cam = posicionesCamaras.get(i);
 
@@ -116,15 +120,28 @@ public class Board {
 		    this.routesBaseCam[i] = new ArrayList<>(path);
 		    this.routesBaseCam[i].remove(0); // remove base
 		    
-            int coste = 0;
-    		for (Pair p: path) {
-    			coste += this.getCellCost(p);
-    		}
-            costesBaseCam[i] = coste;
+            costesBaseCam[i] = computeCost(routesBaseCam[i]);
+            
+	        ArrayList<Pair> reversed = new ArrayList<>(path);
+	        java.util.Collections.reverse(reversed);
+	        
+		    this.routesCamBase[i] = new ArrayList<>(reversed);
+		    this.routesCamBase[i].remove(0); // remove first cam
+		    
+            costesCamBase[i] = computeCost(routesCamBase[i]);
+
 		}
 
 
 
+	}
+	
+	private int computeCost(ArrayList<Pair> path) {
+	    int cost = 0;
+	    for (Pair p : path) {
+	        cost += this.getCellCost(p);
+	    }
+	    return cost;
 	}
 	
 	public int[][] getMap() {
@@ -244,5 +261,13 @@ public class Board {
 	
 	public ArrayList<Pair> getRouteBaseCam(int camId1Based) {
 	    return routesBaseCam[camId1Based - 1];
+	}
+	
+	public int getCosteCamBase(int cam) {
+	    return this.costesCamBase[cam - 1];
+	}
+	
+	public ArrayList<Pair> getRouteCamBase(int camId1Based) {
+	    return routesCamBase[camId1Based - 1];
 	}
 }
