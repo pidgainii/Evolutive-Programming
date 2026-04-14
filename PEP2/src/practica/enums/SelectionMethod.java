@@ -4,5 +4,5 @@ public enum SelectionMethod {
     ROULETTE,
     TOURNAMENT,
     STOCHASTIC,
-    TRUNCATION, REMAINDERS,
+    TRUNCATION, REMAINDERS,RANKING
 }
