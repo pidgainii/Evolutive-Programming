@@ -23,7 +23,7 @@ public class GARunner {
     	
         Fitness fitness = new Fitness(board, numDrones);
 
-        int numCamaras = board.getNumCamaras();
+        int numCamaras = 0;
 
         Population pop = new Population(fitness, popSize, numCamaras, numDrones);
         Evolution evo = new Evolution(fitness, popSize);
