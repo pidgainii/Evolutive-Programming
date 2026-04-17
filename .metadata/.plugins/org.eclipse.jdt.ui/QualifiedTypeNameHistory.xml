@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <qualifiedTypeNameHistroy>
     <fullyQualifiedTypeName name="practica.real.Chromosome"/>
+    <fullyQualifiedTypeName name="practica.enums.Accion"/>
+    <fullyQualifiedTypeName name="practica.enums.Sensor"/>
+    <fullyQualifiedTypeName name="practica.real.Pair"/>
+    <fullyQualifiedTypeName name="practica.enums.Direccion"/>
+    <fullyQualifiedTypeName name="java.util.ArrayList"/>
 </qualifiedTypeNameHistroy>

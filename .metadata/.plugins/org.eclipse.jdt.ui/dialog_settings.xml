@@ -54,4 +54,7 @@
 	</section>
 	<section name="CallHierarchySearchScope">
 	</section>
+	<section name="NewPackageWizardPage">
+		<item key="create_package_info_java" value="false"/>
+	</section>
 </section>
