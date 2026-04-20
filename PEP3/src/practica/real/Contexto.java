@@ -1,4 +1,4 @@
-package practica.ast;
+package practica.real;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -6,7 +6,6 @@ import java.util.Random;
 import practica.enums.Accion;
 import practica.enums.Direccion;
 import practica.enums.Sensor;
-import practica.real.Pair;
 
 public class Contexto {
 

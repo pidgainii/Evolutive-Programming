@@ -1,6 +1,7 @@
 package practica.ast;
 
 import practica.enums.Accion;
+import practica.real.Contexto;
 
 public class NodoAccion extends NodoAST {
 

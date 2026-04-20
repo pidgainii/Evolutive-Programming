@@ -4,24 +4,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
+import practica.ast.NodoAST;
+
 public class Chromosome {
 	
 	
-	// Usamos arrayList y no int[] porque podemos hacer shuffle facilmente
-	// Además, los cruces y mutaciones van a ser más faciles con ArrayList
-	// A no ser que sea muy lento. Si es muy lento, lo cambiamos a int[][]
-	private ArrayList<Integer> genes;
+	private NodoAST tree;
     private double fitness;
     private double acum_fitness;
     private double relative_fitness;
     
     
-    public Chromosome(ArrayList<Integer> genes) {
-    	this.genes = genes;
+    public Chromosome(NodoAST tree) {
+    	this.tree = tree;
     }
     
     public Chromosome(Chromosome chromosome) {
-        this.genes = new ArrayList<Integer>(chromosome.getGenes());
+        //this.genes = new ArrayList<Integer>(chromosome.getGenes());
         this.fitness = chromosome.getFitness();
         this.acum_fitness = chromosome.getAcum_fitness();
         this.relative_fitness = chromosome.getRelative_fitness();
@@ -32,12 +31,12 @@ public class Chromosome {
         return new Chromosome(this);
     }
 
-    public void setGenes(ArrayList<Integer> genes) {
-    	this.genes = genes;
+    public void setTree(NodoAST tree) {
+    	this.tree = tree;
     }
     
-    public ArrayList<Integer> getGenes() {
-        return genes;
+    public NodoAST getTree() {
+        return this.tree;
     }
 
     public double getFitness() {

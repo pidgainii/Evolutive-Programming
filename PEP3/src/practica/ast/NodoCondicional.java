@@ -1,6 +1,7 @@
 package practica.ast;
 
 import practica.enums.Sensor;
+import practica.real.Contexto;
 
 public class NodoCondicional extends NodoAST {
 

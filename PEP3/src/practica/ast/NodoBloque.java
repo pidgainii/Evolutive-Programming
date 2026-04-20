@@ -1,5 +1,7 @@
 package practica.ast;
 
+import practica.real.Contexto;
+
 public class NodoBloque extends NodoAST {
 
 	

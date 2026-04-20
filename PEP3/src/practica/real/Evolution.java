@@ -185,32 +185,4 @@ public class Evolution {
         return elite;
     }
     
-    private Chromosome twoOptLocalSearch(Chromosome ind, Random rand) {
-        ArrayList<Integer> genes = new ArrayList<>(ind.getGenes());
-        int n = genes.size();
-
-        // pick two positions
-        int i = rand.nextInt(n);
-        int k = rand.nextInt(n);
-
-        if (i > k) {
-            int tmp = i;
-            i = k;
-            k = tmp;
-        }
-
-        // avoid trivial cases
-        if (k - i < 2) return ind.clone();
-
-        // 2-opt: reverse sublist
-        while (i < k) {
-            int temp = genes.get(i);
-            genes.set(i, genes.get(k));
-            genes.set(k, temp);
-            i++;
-            k--;
-        }
-
-        return new Chromosome(genes);
-    }
 }
