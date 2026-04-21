@@ -14,16 +14,20 @@ public class Chromosome {
     private double acum_fitness;
     private double relative_fitness;
     
+    public Chromosome(Chromosome other) {
+        // CRITICAL: You must clone the tree, not just copy the reference!
+        // Assuming your NodoAST has a copy() or clone() method
+        if (other.tree != null) {
+            this.tree = other.tree.deepCopy(); 
+        }
+        this.fitness = other.fitness;
+        this.acum_fitness = other.acum_fitness;
+        this.relative_fitness = other.relative_fitness;
+    }
+
     
     public Chromosome(NodoAST tree) {
     	this.tree = tree;
-    }
-    
-    public Chromosome(Chromosome chromosome) {
-        //this.genes = new ArrayList<Integer>(chromosome.getGenes());
-        this.fitness = chromosome.getFitness();
-        this.acum_fitness = chromosome.getAcum_fitness();
-        this.relative_fitness = chromosome.getRelative_fitness();
     }
     
     @Override

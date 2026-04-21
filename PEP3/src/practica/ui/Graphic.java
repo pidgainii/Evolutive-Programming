@@ -6,70 +6,64 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.chart.plot.XYPlot;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
-import practica.real.Board;
+import practica.GARunner;
+import practica.real.Contexto;
+import practica.real.Chromosome;
+import practica.real.Pair;
+import practica.enums.Sensor;
 
 public class Graphic extends JFrame {
 
-    // --- COLORES TEMA LUNAR ---
     private final Color BG_DARK = new Color(15, 15, 15);
     private final Color PANEL_DARK = new Color(28, 28, 28);
     private final Color TEXT_LIGHT = new Color(210, 210, 210);
     private final Color ACCENT_CYAN = new Color(0, 255, 255);
 
-    // --- COMPONENTES UI ---
-    private final JSpinner spPop = new JSpinner(new SpinnerNumberModel(100, 2, 5000, 10));
-    private final JSpinner spGen = new JSpinner(new SpinnerNumberModel(200, 1, 10000, 10));
+    private final JSpinner spPop = new JSpinner(new SpinnerNumberModel(300, 2, 5000, 10));
+    private final JSpinner spGen = new JSpinner(new SpinnerNumberModel(300, 1, 10000, 10));
     private final JSpinner spPc = new JSpinner(new SpinnerNumberModel(0.6, 0.0, 1.0, 0.05));
     private final JSpinner spPm = new JSpinner(new SpinnerNumberModel(0.1, 0.0, 1.0, 0.01));
     private final JSpinner spElit = new JSpinner(new SpinnerNumberModel(0.15, 0.0, 1.0, 0.05));
-    
     private final JSpinner spMaxDepth = new JSpinner(new SpinnerNumberModel(5, 2, 20, 1));
-    private final JSpinner spBloat = new JSpinner(new SpinnerNumberModel(0.01, 0.0, 1.0, 0.001));
+    private final JSpinner spBloat = new JSpinner(new SpinnerNumberModel(0.5, 0.0, 5.0, 0.1));
     private final JSpinner spSeed = new JSpinner(new SpinnerNumberModel(3000, 0, Integer.MAX_VALUE, 1));
 
-    private final JComboBox<String> selMethod = new JComboBox<>(new String[]{"ROULETTE", "TOURNAMENT", "RANKING"});
-    private final JComboBox<String> crossMethod = new JComboBox<>(new String[]{"SUBTREE", "ONE-POINT"});
-    private final JComboBox<String> mutMethod = new JComboBox<>(new String[]{"PUNTUAL", "SUBTREE", "PERMUTATION"});
-
-    private final JButton btnRun = new JButton("RUN EVOLUTION");
+    private final JComboBox<String> mutMethod = new JComboBox<>(new String[]{"ALEATORIA", "SUBTREE", "PUNTUAL", "HOIST"});
+    private final JButton btnGenMap = new JButton("GENERAR MAPA");
+    private final JButton btnEvolve = new JButton("EVOLUCIONAR Y EJECUTAR");
     private final JLabel lblBest = new JLabel("Best Fitness: -");
     private final JTextPane txtPhenotype = new JTextPane();
 
-    private final XYSeries sBestGen = new XYSeries("Mejor gen", false, true);
+    private final XYSeries sBestGen = new XYSeries("Mejor Gen", false, true);
     private final XYSeries sAvg = new XYSeries("Media", false, true);
     
-    private Board board;
-    private BoardPanel boardPanel;
+    private Contexto c1, c2, c3;
+    private ContextPanel contextPanel;
+    private Timer animationTimer;
 
     public Graphic() {
-        super("Lunar Rover GP - Genetic Programming");
+        super("Lunar Rover GP - Progra Evolutiva 25/26");
         setupTheme();
+        this.contextPanel = new ContextPanel(null);
 
-        this.board = new Board((Integer) spSeed.getValue(), 15, 15);
-        this.boardPanel = new BoardPanel(board);
-
-        // Layout Principal: BorderLayout con espaciado
         setLayout(new BorderLayout(10, 10));
         ((JPanel)getContentPane()).setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         getContentPane().setBackground(BG_DARK);
 
-        // 1. PANEL IZQUIERDO: Parámetros (fijo a la izquierda)
         add(buildLeftConfigPanel(), BorderLayout.WEST);
-
-        // 2. PANEL CENTRAL: Gráfica + Fenotipo (reemplazando el Log)
         add(buildCenterAnalysisPanel(), BorderLayout.CENTER);
+        add(buildRightContextPanel(), BorderLayout.EAST);
 
-        // 3. PANEL DERECHO: Board (Mapa)
-        add(buildRightBoardPanel(), BorderLayout.EAST);
+        btnGenMap.addActionListener(e -> generateMaps());
+        btnEvolve.addActionListener(e -> runEvolutionAndExecution());
 
-        btnRun.addActionListener(e -> run());
-
-        setSize(1400, 800);
+        setSize(1400, 850);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
     }
@@ -77,11 +71,10 @@ public class Graphic extends JFrame {
     private void setupTheme() {
         UIManager.put("Panel.background", PANEL_DARK);
         UIManager.put("Label.foreground", TEXT_LIGHT);
-        UIManager.put("ComboBox.background", Color.DARK_GRAY);
-        UIManager.put("ComboBox.foreground", Color.WHITE);
-        btnRun.setBackground(new Color(35, 60, 60));
-        btnRun.setForeground(ACCENT_CYAN);
-        btnRun.setFont(new Font("SansSerif", Font.BOLD, 12));
+        btnGenMap.setBackground(new Color(60, 60, 35));
+        btnGenMap.setForeground(Color.YELLOW);
+        btnEvolve.setBackground(new Color(35, 60, 60));
+        btnEvolve.setForeground(ACCENT_CYAN);
     }
 
     private JPanel buildLeftConfigPanel() {
@@ -89,118 +82,140 @@ public class Graphic extends JFrame {
         container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
         container.setPreferredSize(new Dimension(280, 0));
 
-        // GA Parameters
         JPanel pGA = new JPanel(new GridLayout(0, 2, 5, 8));
-        pGA.setBorder(createTitledBorder("GA Parameters"));
+        pGA.setBorder(createTitledBorder("Parámetros Algoritmo"));
         pGA.add(new JLabel("Población:")); pGA.add(spPop);
         pGA.add(new JLabel("Generaciones:")); pGA.add(spGen);
-        pGA.add(new JLabel("Pc:")); pGA.add(spPc);
-        pGA.add(new JLabel("Pm:")); pGA.add(spPm);
+        pGA.add(new JLabel("Pc (Cruce):")); pGA.add(spPc);
+        pGA.add(new JLabel("Pm (Mut):")); pGA.add(spPm);
         pGA.add(new JLabel("Elitismo:")); pGA.add(spElit);
 
-        // Problem / GP Specific
         JPanel pProb = new JPanel(new GridLayout(0, 2, 5, 8));
-        pProb.setBorder(createTitledBorder("Problem / GP"));
+        pProb.setBorder(createTitledBorder("Configuración GP"));
         pProb.add(new JLabel("Prof. Max:")); pProb.add(spMaxDepth);
         pProb.add(new JLabel("Bloating:")); pProb.add(spBloat);
         pProb.add(new JLabel("Semilla:")); pProb.add(spSeed);
 
-        // Operators
         JPanel pOps = new JPanel(new GridLayout(0, 1, 5, 5));
-        pOps.setBorder(createTitledBorder("Operators"));
-        pOps.add(new JLabel("Selección:")); pOps.add(selMethod);
-        pOps.add(new JLabel("Cruce:")); pOps.add(crossMethod);
-        pOps.add(new JLabel("Mutación:")); pOps.add(mutMethod);
+        pOps.setBorder(createTitledBorder("Operadores"));
+        pOps.add(new JLabel("Estrategia Mutación:")); pOps.add(mutMethod);
 
-        // Botón Run & Status
-        JPanel pBtn = new JPanel(new BorderLayout(5, 5));
+        JPanel pBtn = new JPanel(new GridLayout(3, 1, 5, 5));
         pBtn.setOpaque(false);
-        pBtn.add(btnRun, BorderLayout.NORTH);
+        pBtn.add(btnGenMap);
+        pBtn.add(btnEvolve);
         lblBest.setHorizontalAlignment(SwingConstants.CENTER);
-        pBtn.add(lblBest, BorderLayout.SOUTH);
+        pBtn.add(lblBest);
 
-        container.add(pGA);
-        container.add(Box.createVerticalStrut(10));
-        container.add(pProb);
-        container.add(Box.createVerticalStrut(10));
-        container.add(pOps);
-        container.add(Box.createVerticalGlue());
+        container.add(pGA); container.add(Box.createVerticalStrut(10));
+        container.add(pProb); container.add(Box.createVerticalStrut(10));
+        container.add(pOps); container.add(Box.createVerticalGlue());
         container.add(pBtn);
-
         return container;
     }
 
     private JPanel buildCenterAnalysisPanel() {
         JPanel container = new JPanel(new BorderLayout());
-
-        // Parte superior: Gráfica
-        ChartPanel chartPanel = buildChart();
+        ChartPanel chartPanel = new ChartPanel(buildChart());
         chartPanel.setBorder(createTitledBorder("Evolución del Fitness"));
         
-        // Parte inferior: Fenotipo (Donde antes estaba el Log)
         txtPhenotype.setBackground(new Color(10, 12, 12));
-        txtPhenotype.setForeground(new Color(150, 255, 150)); // Verde Matrix/Código
+        txtPhenotype.setForeground(new Color(150, 255, 150)); 
         txtPhenotype.setEditable(false);
-        txtPhenotype.setFont(new Font("Consolas", Font.PLAIN, 13));
+        txtPhenotype.setFont(new Font("Consolas", Font.PLAIN, 12));
         
-        JScrollPane scrollPhenotype = new JScrollPane(txtPhenotype);
-        scrollPhenotype.setBorder(createTitledBorder("Best Strategy (Phenotype)"));
+        JScrollPane scroll = new JScrollPane(txtPhenotype);
+        scroll.setBorder(createTitledBorder("Mejor Programa (Fenotipo AST)"));
 
-        // Split vertical para ajustar tamaños entre gráfica y código
-        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, chartPanel, scrollPhenotype);
+        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, chartPanel, scroll);
         split.setDividerLocation(400);
-        split.setResizeWeight(0.5);
-        split.setOpaque(false);
-        split.setBorder(null);
-
         container.add(split, BorderLayout.CENTER);
         return container;
     }
 
-    private JPanel buildRightBoardPanel() {
+    private JPanel buildRightContextPanel() {
         JPanel container = new JPanel(new BorderLayout());
-        container.setBorder(createTitledBorder("Board Explorer"));
-        container.setPreferredSize(new Dimension(600, 0));
-        
-        // El BoardPanel ocupará el centro
-        container.add(boardPanel, BorderLayout.CENTER);
+        container.setBorder(createTitledBorder("Simulación en Tiempo Real"));
+        container.setPreferredSize(new Dimension(500, 0));
+        container.add(contextPanel, BorderLayout.CENTER);
         return container;
     }
 
-    private ChartPanel buildChart() {
+    private JFreeChart buildChart() {
         XYSeriesCollection dataset = new XYSeriesCollection();
         dataset.addSeries(sBestGen);
         dataset.addSeries(sAvg);
-
         JFreeChart chart = ChartFactory.createXYLineChart(null, "Generación", "Fitness", dataset, PlotOrientation.VERTICAL, true, true, false);
-        styleChart(chart);
-        return new ChartPanel(chart);
-    }
-
-    private void styleChart(JFreeChart chart) {
         chart.setBackgroundPaint(PANEL_DARK);
-        XYPlot plot = chart.getXYPlot();
-        plot.setBackgroundPaint(BG_DARK);
-        plot.setDomainGridlinePaint(Color.GRAY);
-        plot.setRangeGridlinePaint(Color.GRAY);
-        plot.getRenderer().setSeriesPaint(0, Color.RED);
-        plot.getRenderer().setSeriesPaint(1, new Color(0, 200, 0));
-        chart.getLegend().setBackgroundPaint(PANEL_DARK);
-        chart.getLegend().setItemPaint(TEXT_LIGHT);
+        chart.getXYPlot().setBackgroundPaint(BG_DARK);
+        return chart;
     }
 
     private TitledBorder createTitledBorder(String title) {
         TitledBorder tb = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.DARK_GRAY), title);
         tb.setTitleColor(ACCENT_CYAN);
-        tb.setTitleFont(new Font("SansSerif", Font.BOLD, 11));
         return tb;
     }
 
-    private void run() {
-        // Simulación de inicio
-        sBestGen.clear();
-        sAvg.clear();
-        txtPhenotype.setText("// Analizando población...\n// Generando AST...");
-        lblBest.setText("Best Fitness: calculando...");
+    private void generateMaps() {
+        int seed = (Integer) spSeed.getValue();
+        this.c1 = new Contexto(seed, 15, 15);
+        this.c2 = new Contexto(seed + 1, 15, 15);
+        this.c3 = new Contexto(seed + 2, 15, 15);
+        contextPanel.setContext(this.c1);
+        contextPanel.updateTrail(new ArrayList<>());
+        btnEvolve.setEnabled(true);
+    }
+
+    private void runEvolutionAndExecution() {
+        if (c1 == null) return;
+        if (animationTimer != null) animationTimer.stop();
+
+        sBestGen.clear(); sAvg.clear();
+        btnEvolve.setEnabled(false);
+        
+        new Thread(() -> {
+            GAResult result = GARunner.run(
+                c1, c2, c3, (Integer)spPop.getValue(), (Integer)spGen.getValue(), 
+                (Double)spPc.getValue(), (Double)spPm.getValue(), (Double)spElit.getValue(), 
+                (String)mutMethod.getSelectedItem(), (Integer)spMaxDepth.getValue(), (Double)spBloat.getValue(),
+                (gen, bGen, bEver, avg, bestChr) -> {
+                    SwingUtilities.invokeLater(() -> {
+                        sBestGen.addOrUpdate(gen, bGen);
+                        sAvg.addOrUpdate(gen, avg);
+                        lblBest.setText(String.format("Mejor: %.2f", bEver));
+                    });
+                }
+            );
+
+            Chromosome winner = (Chromosome) result.getBest();
+            SwingUtilities.invokeLater(() -> {
+                txtPhenotype.setText(winner.getTree().toString());
+                startSimulation(winner);
+                btnEvolve.setEnabled(true);
+            });
+        }).start();
+    }
+
+    private void startSimulation(Chromosome best) {
+        // Reset a fresh context for visual display
+        Contexto simCtx = new Contexto((Integer) spSeed.getValue(), 15, 15);
+        contextPanel.setContext(simCtx);
+        List<Pair> trail = new ArrayList<>();
+        
+        animationTimer = new Timer(100, e -> {
+            if (simCtx.leerSensor(Sensor.NIVEL_ENERGIA) <= 0 || simCtx.getTicks() >= 150) {
+                ((Timer)e.getSource()).stop();
+                return;
+            }
+            
+            // Execute one step of the AST
+            best.getTree().ejecutar(simCtx);
+            trail.add(new Pair(simCtx.getCoordenadas().x(), simCtx.getCoordenadas().y()));
+            
+            contextPanel.updateTrail(trail);
+            contextPanel.repaint();
+        });
+        animationTimer.start();
     }
 }

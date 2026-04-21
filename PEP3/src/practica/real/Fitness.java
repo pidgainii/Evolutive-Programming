@@ -5,82 +5,41 @@ import java.util.Arrays;
 
 public class Fitness {
 
-    private final Board board;
-    private final int numDrones;
-
-    public Fitness(Board board, int numDrones) {
-        this.board = board;
-        this.numDrones = Math.max(1, Math.min(5, numDrones));
+	private Contexto c1;
+	private Contexto c2;
+	private Contexto c3;
+	private double bloating;
+	
+    public Fitness(Contexto c1, Contexto c2, Contexto c3, double bloating) {
+        this.c1 = c1;
+        this.c2 = c2;
+        this.c3 = c3;
+        this.bloating = bloating;
     }
 
-    public double evaluate(Chromosome individual) {
-        return evaluateBreakdown(individual).fitness();
+    public double evaluate_final(Chromosome individual) {
+        double f1 = this.evaluate_base(individual, this.c1);
+        double f2 = this.evaluate_base(individual, this.c2);
+        double f3 = this.evaluate_base(individual, this.c3);
+        
+        double bloating_penalization = individual.getTree().tam() * this.bloating;
+        
+        return (f1+f2+f3) / 3.0 - bloating_penalization;
+    }
+    
+    public double evaluate_base(Chromosome individual, Contexto c) {
+    	// Tenemos que "ejecutar" el cromosoma sobre ese contexto
+    	individual.getTree().ejecutar(c);
+    	
+    	double fitness_base = c.getMuestras()*500 + c.getExploradas()*20 +
+    			c.getRecompensaVisual()*2 - c.getPisadasArena()*30 - c.getColisiones()*10;
+    	
+    	// Penalización por pereza
+    	if (c.getExploradas() < 4) {
+    		fitness_base -= 1000;
+    	}
+    	
+    	return fitness_base;
     }
 
-    public FitnessBreakdown evaluateBreakdown(Chromosome individual) {
-
-        ArrayList<Integer> genes = individual.getGenes();
-
-        double[] times = new double[numDrones];
-
-        int current_dron = 0;
-
-        double[] dron_velocity_all = {1.5, 1.0, 0.7, 1.2, 0.5};
-        double[] dron_velocity = Arrays.copyOf(dron_velocity_all, numDrones);
-
-        int num_camaras = this.board.getNumCamaras();
-
-        Integer prevCam = null;
-        boolean started = false;
-
-        for (int g : genes) {
-
-            // separador => cerrar dron y pasar al siguiente
-            if (g > num_camaras) {
-                if (prevCam != null) {
-                    int costBack = board.getCosteCamBase(prevCam);
-                    times[current_dron] += costBack / dron_velocity[current_dron];
-                }
-
-                current_dron++;
-                if (current_dron >= numDrones) break;
-
-                prevCam = null;
-                started = false;
-                continue;
-            }
-
-            // cámara
-            int cam = g;
-
-            if (!started) {
-                int costOut = board.getCosteBaseCam(cam);
-                times[current_dron] += costOut / dron_velocity[current_dron];
-                started = true;
-                prevCam = cam;
-                continue;
-            }
-
-            int costSeg = this.board.getCoste(prevCam, cam);
-            times[current_dron] += costSeg / dron_velocity[current_dron];
-            prevCam = cam;
-        }
-
-        // cerrar último dron si aplica
-        if (current_dron < numDrones && prevCam != null) {
-            int costBack = board.getCosteCamBase(prevCam);
-            times[current_dron] += costBack / dron_velocity[current_dron];
-        }
-
-        double maxT = times[0], minT = times[0];
-        for (int i = 1; i < times.length; i++) {
-            if (times[i] > maxT) maxT = times[i];
-            if (times[i] < minT) minT = times[i];
-        }
-
-        double penalty = (maxT - minT) * 0.5;
-        double fitness = maxT + penalty;
-
-        return new FitnessBreakdown(times, fitness);
-    }
 }

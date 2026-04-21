@@ -3,5 +3,9 @@ package practica.ast;
 import practica.real.Contexto;
 
 public abstract class NodoAST {
-	abstract void ejecutar(Contexto contexto);
+	public abstract void ejecutar(Contexto contexto);
+	
+	public abstract int tam();
+	
+	public abstract NodoAST deepCopy();
 }

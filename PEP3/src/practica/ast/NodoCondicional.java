@@ -18,13 +18,28 @@ public class NodoCondicional extends NodoAST {
 	}
 	
 	@Override
-	void ejecutar(Contexto contexto) {
+	public void ejecutar(Contexto contexto) {
 		if (contexto.leerSensor(this.sensor) < this.umbral) {
 			this.hijoIzquierdo.ejecutar(contexto);
 		} else {
 			this.hijoDerecho.ejecutar(contexto);
 		}
 		
+	}
+
+	@Override
+	public int tam() {
+		return 1 + this.hijoIzquierdo.tam() + this.hijoDerecho.tam();
+	}
+
+	@Override
+	public NodoAST deepCopy() {
+	    return new NodoCondicional(
+	        this.sensor, 
+	        this.umbral, 
+	        this.hijoIzquierdo.deepCopy(), 
+	        this.hijoDerecho.deepCopy()
+	    );
 	}
 
 }

@@ -5,28 +5,27 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import practica.real.Board;
+import practica.real.Contexto;
 import practica.real.Chromosome;
 import practica.real.Pair;
 
-// --- PANEL DEL MAPA PERSONALIZADO ---
-public class BoardPanel extends JPanel {
-	
-	private final Color BG_DARK = new Color(18, 18, 18);
+public class ContextPanel extends JPanel {
+    
+    private final Color BG_DARK = new Color(18, 18, 18);
     private final Color PANEL_DARK = new Color(30, 30, 30);
     private final Color TEXT_LIGHT = new Color(220, 220, 220);
     private final Color ACCENT_CYAN = new Color(0, 255, 255);
-	
-    private Board board;
-    private List<Pair> trail = new ArrayList<>(); // Huellas exploradas
+    
+    private Contexto contexto;
+    private List<Pair> trail = new ArrayList<>();
 
-    public BoardPanel(Board b) {
-        this.board = b;
+    public ContextPanel(Contexto c) {
+        this.contexto = c;
         setBackground(BG_DARK);
     }
 
-    public void setBoard(Board b) { 
-        this.board = b; 
+    public void setContext(Contexto c) { 
+        this.contexto = c; 
         repaint(); 
     }
 
@@ -38,18 +37,21 @@ public class BoardPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (board == null) return;
+        if (contexto == null) return;
 
         Graphics2D g2 = (Graphics2D) g;
-        int rows = board.alto();
-        int cols = board.ancho();
+        // Nota: Asegúrate de tener getAlto(), getAncho() y getMap() en Contexto.java
+        int rows = contexto.getAlto();
+        int cols = contexto.getAncho();
+        int[][] map = contexto.getMap();
+        
         int cellSize = Math.min(getWidth() / cols, getHeight() / rows);
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 int x = j * cellSize;
                 int y = i * cellSize;
-                int val = board.getMap()[i][j];
+                int val = map[i][j];
 
                 // Dibujar celda base (Suelo oscuro)
                 g2.setColor(new Color(25, 25, 25));
@@ -86,12 +88,15 @@ public class BoardPanel extends JPanel {
         }
 
         // DIBUJAR ROVER (Triángulo Cian)
-        Pair pos = board.getBase(); // O la posición actual del rover
-        g2.setColor(ACCENT_CYAN);
-        int rx = pos.y() * cellSize;
-        int ry = pos.x() * cellSize;
-        int[] px = {rx + 5, rx + cellSize - 5, rx + cellSize / 2};
-        int[] py = {ry + cellSize - 5, ry + cellSize - 5, ry + 5};
-        g2.fillPolygon(px, py, 3);
+        // Nota: Asegúrate de tener getCoordenadas() en Contexto.java
+        Pair pos = contexto.getCoordenadas(); 
+        if (pos != null) {
+            g2.setColor(ACCENT_CYAN);
+            int rx = pos.y() * cellSize;
+            int ry = pos.x() * cellSize;
+            int[] px = {rx + 5, rx + cellSize - 5, rx + cellSize / 2};
+            int[] py = {ry + cellSize - 5, ry + cellSize - 5, ry + 5};
+            g2.fillPolygon(px, py, 3);
+        }
     }
 }

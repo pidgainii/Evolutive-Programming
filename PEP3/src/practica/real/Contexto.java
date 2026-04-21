@@ -241,6 +241,49 @@ public class Contexto {
 	        }
 	    }
 	}
+
+
+
+	// public getters
+	public int getMuestras() {
+		return this.muestras;
+	}
+	
+	public int getExploradas() {
+		return this.exploracion;
+	}
+	
+	public int getRecompensaVisual() {
+		return this.recompensaVisual;
+	}
+	
+	public int getPisadasArena() {
+		return this.pisadasArena;
+	}
+	
+	public int getColisiones() {
+		return this.colisiones;
+	}
+	
+	public int getAlto() {
+		return this.ALTO;
+	}
+	
+	public int getAncho() {
+		return this.ANCHO;
+	}
+	
+	public int[][] getMap() {
+		return this.map;
+	}
+	
+	public Pair getCoordenadas() {
+		return this.coordenadas;
+	}
+	
+	public int getTicks() {
+		return this.ticks;
+	}
 }
 
 

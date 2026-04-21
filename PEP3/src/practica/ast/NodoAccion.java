@@ -12,9 +12,19 @@ public class NodoAccion extends NodoAST {
 	}
 	
 	@Override
-	void ejecutar(Contexto contexto) {
+	public void ejecutar(Contexto contexto) {
 		contexto.ejecutarAccion(this.accion);
 		
+	}
+
+	@Override
+	public int tam() {
+		return 1;
+	}
+
+	@Override
+	public NodoAST deepCopy() {
+	    return new NodoAccion(this.accion);
 	}
 	
 }
