@@ -96,8 +96,8 @@ public class Population {
                 Sensor[] sensores = Sensor.values();
                 Sensor sensor = sensores[random.nextInt(sensores.length)];
                 
-                // TODO: Poner el umbral en otro sitio
-                int umbral = ThreadLocalRandom.current().nextInt(1, 16);
+                int[] options = {10, 50, 100};
+                int umbral = options[new java.util.Random().nextInt(options.length)];
                 
                 NodoAST hijoIzquierdo = this.generarArbolFull(profActual+1, profMax);
                 NodoAST hijoDerecho = this.generarArbolFull(profActual+1, profMax);
@@ -144,8 +144,8 @@ public class Population {
                 Sensor[] sensores = Sensor.values();
                 Sensor sensor = sensores[random.nextInt(sensores.length)];
                 
-                // TODO: Poner el umbral en otro sitio
-                int umbral = ThreadLocalRandom.current().nextInt(1, 16);
+                int[] values = {10, 50, 100};
+                int umbral = values[new java.util.Random().nextInt(values.length)];
                 
                 NodoAST hijoIzquierdo = this.generarArbolGrow(profActual+1, profMax);
                 NodoAST hijoDerecho = this.generarArbolGrow(profActual+1, profMax);

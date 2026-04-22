@@ -5,8 +5,8 @@ import practica.real.Contexto;
 
 public class NodoCondicional extends NodoAST {
 
-	private final Sensor sensor;
-	private final int umbral;
+	public final Sensor sensor;
+	public final int umbral;
 	private final NodoAST hijoIzquierdo;
 	private final NodoAST hijoDerecho;
 	
@@ -41,5 +41,35 @@ public class NodoCondicional extends NodoAST {
 	        this.hijoDerecho.deepCopy()
 	    );
 	}
+	
+	@Override
+    public NodoAST getSubtree(int[] contador, int objetivo) {
+        if (contador[0] == objetivo) return this;
+        contador[0]++;
+        
+        NodoAST izq = this.hijoIzquierdo.getSubtree(contador, objetivo);
+        if (izq != null) return izq;
+        
+        return this.hijoDerecho.getSubtree(contador, objetivo);
+    }
+
+    @Override
+    public NodoAST replaceSubtree(int[] contador, int objetivo, NodoAST reemplazo) {
+        if (contador[0] == objetivo) return reemplazo.deepCopy();
+        contador[0]++;
+        
+        NodoAST nuevoIzq = this.hijoIzquierdo.replaceSubtree(contador, objetivo, reemplazo);
+        NodoAST nuevoDer = this.hijoDerecho.replaceSubtree(contador, objetivo, reemplazo);
+        
+        return new NodoCondicional(this.sensor, this.umbral, nuevoIzq, nuevoDer);
+    }
+
+	@Override
+	public boolean isLeaf() {
+		return false;
+	}
+	
+	public NodoAST getHijoIzquierdo() { return this.hijoIzquierdo; }
+	public NodoAST getHijoDerecho() { return this.hijoDerecho; }
 
 }

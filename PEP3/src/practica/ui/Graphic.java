@@ -13,10 +13,15 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
 import practica.GARunner;
+import practica.ast.NodoAST;
+import practica.ast.NodoAccion;
+import practica.ast.NodoBloque;
+import practica.ast.NodoCondicional;
 import practica.real.Contexto;
 import practica.real.Chromosome;
 import practica.real.Pair;
 import practica.enums.Sensor;
+import practica.enums.SelectionMethod;
 
 public class Graphic extends JFrame {
 
@@ -34,9 +39,13 @@ public class Graphic extends JFrame {
     private final JSpinner spBloat = new JSpinner(new SpinnerNumberModel(0.5, 0.0, 5.0, 0.1));
     private final JSpinner spSeed = new JSpinner(new SpinnerNumberModel(3000, 0, Integer.MAX_VALUE, 1));
 
-    private final JComboBox<String> mutMethod = new JComboBox<>(new String[]{"ALEATORIA", "SUBTREE", "PUNTUAL", "HOIST"});
+    // NUEVO: Combo box para el método de selección
+    private final JComboBox<String> selMethod = new JComboBox<>(new String[]{"ROULETTE", "TOURNAMENT", "STOCHASTIC", "TRUNCATION", "REMAINDERS", "RANKING"});
+    private final JComboBox<String> mutMethod = new JComboBox<>(new String[]{"SUBARBOL", "FUNCIONAL", "TERMINAL", "HOIST", "ALEATORIA"});
+    
     private final JButton btnGenMap = new JButton("GENERAR MAPA");
-    private final JButton btnEvolve = new JButton("EVOLUCIONAR Y EJECUTAR");
+    private final JButton btnEvolve = new JButton("EVOLUCIONAR"); 
+    private final JButton btnRunSim = new JButton("EJECUTAR SIMULACIÓN");
     private final JLabel lblBest = new JLabel("Best Fitness: -");
     private final JTextPane txtPhenotype = new JTextPane();
 
@@ -46,6 +55,8 @@ public class Graphic extends JFrame {
     private Contexto c1, c2, c3;
     private ContextPanel contextPanel;
     private Timer animationTimer;
+    
+    private Chromosome bestChromosome = null;
 
     public Graphic() {
         super("Lunar Rover GP - Progra Evolutiva 25/26");
@@ -61,7 +72,8 @@ public class Graphic extends JFrame {
         add(buildRightContextPanel(), BorderLayout.EAST);
 
         btnGenMap.addActionListener(e -> generateMaps());
-        btnEvolve.addActionListener(e -> runEvolutionAndExecution());
+        btnEvolve.addActionListener(e -> runEvolution());
+        btnRunSim.addActionListener(e -> runSimulation());
 
         setSize(1400, 850);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -75,6 +87,11 @@ public class Graphic extends JFrame {
         btnGenMap.setForeground(Color.YELLOW);
         btnEvolve.setBackground(new Color(35, 60, 60));
         btnEvolve.setForeground(ACCENT_CYAN);
+        btnRunSim.setBackground(new Color(60, 35, 60)); 
+        btnRunSim.setForeground(new Color(255, 100, 255));
+        
+        btnEvolve.setEnabled(false);
+        btnRunSim.setEnabled(false);
     }
 
     private JPanel buildLeftConfigPanel() {
@@ -96,14 +113,17 @@ public class Graphic extends JFrame {
         pProb.add(new JLabel("Bloating:")); pProb.add(spBloat);
         pProb.add(new JLabel("Semilla:")); pProb.add(spSeed);
 
-        JPanel pOps = new JPanel(new GridLayout(0, 1, 5, 5));
+        // MODIFICADO: Dos columnas para organizar mejor los operadores
+        JPanel pOps = new JPanel(new GridLayout(0, 2, 5, 5));
         pOps.setBorder(createTitledBorder("Operadores"));
-        pOps.add(new JLabel("Estrategia Mutación:")); pOps.add(mutMethod);
+        pOps.add(new JLabel("Selección:")); pOps.add(selMethod); // Añadido selector
+        pOps.add(new JLabel("Mutación:")); pOps.add(mutMethod);
 
-        JPanel pBtn = new JPanel(new GridLayout(3, 1, 5, 5));
+        JPanel pBtn = new JPanel(new GridLayout(4, 1, 5, 5)); 
         pBtn.setOpaque(false);
         pBtn.add(btnGenMap);
         pBtn.add(btnEvolve);
+        pBtn.add(btnRunSim);
         lblBest.setHorizontalAlignment(SwingConstants.CENTER);
         pBtn.add(lblBest);
 
@@ -156,28 +176,78 @@ public class Graphic extends JFrame {
         tb.setTitleColor(ACCENT_CYAN);
         return tb;
     }
+    
+    private String formatAST(NodoAST nodo, int nivel) {
+        String indent = " ".repeat(nivel * 2);
+
+        if (nodo instanceof NodoBloque bloque) {
+            StringBuilder sb = new StringBuilder();
+            for (NodoAST hijo : bloque.hijos) {
+                sb.append(formatAST(hijo, nivel));
+            }
+            return sb.toString();
+        }
+
+        if (nodo instanceof NodoCondicional cond) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(indent).append("IF ( ")
+              .append(cond.sensor)
+              .append(" > ")
+              .append(cond.umbral)
+              .append(" ) {\n");
+
+            sb.append(formatAST(cond.getHijoIzquierdo(), nivel + 1));
+
+            sb.append(indent).append("} ELSE {\n");
+
+            sb.append(formatAST(cond.getHijoDerecho(), nivel + 1));
+
+            sb.append(indent).append("}\n");
+
+            return sb.toString();
+        }
+
+        if (nodo instanceof NodoAccion acc) {
+            return indent + acc.getAccion() + "();\n";
+        }
+
+        return "";
+    }
 
     private void generateMaps() {
+        if (animationTimer != null) animationTimer.stop(); 
+        
         int seed = (Integer) spSeed.getValue();
         this.c1 = new Contexto(seed, 15, 15);
         this.c2 = new Contexto(seed + 1, 15, 15);
         this.c3 = new Contexto(seed + 2, 15, 15);
         contextPanel.setContext(this.c1);
         contextPanel.updateTrail(new ArrayList<>());
+        
         btnEvolve.setEnabled(true);
+        btnRunSim.setEnabled(false);
+        bestChromosome = null; 
     }
 
-    private void runEvolutionAndExecution() {
-        if (c1 == null) return;
+    private void runEvolution() {
+        // SOLUCIÓN AL BUG: Re-creamos los mapas para limpiarlos antes de evolucionar de nuevo
+        int seed = (Integer) spSeed.getValue();
+        this.c1 = new Contexto(seed, 15, 15);
+        this.c2 = new Contexto(seed + 1, 15, 15);
+        this.c3 = new Contexto(seed + 2, 15, 15);
+
         if (animationTimer != null) animationTimer.stop();
 
         sBestGen.clear(); sAvg.clear();
         btnEvolve.setEnabled(false);
+        btnRunSim.setEnabled(false);
         
         new Thread(() -> {
+            // NOTA: Recuerda actualizar el método GARunner.run() para que acepte el nuevo String de selMethod
             GAResult result = GARunner.run(
                 c1, c2, c3, (Integer)spPop.getValue(), (Integer)spGen.getValue(), 
                 (Double)spPc.getValue(), (Double)spPm.getValue(), (Double)spElit.getValue(), 
+                (String)selMethod.getSelectedItem(), // NUEVO: Pasamos el método de selección
                 (String)mutMethod.getSelectedItem(), (Integer)spMaxDepth.getValue(), (Double)spBloat.getValue(),
                 (gen, bGen, bEver, avg, bestChr) -> {
                     SwingUtilities.invokeLater(() -> {
@@ -188,31 +258,54 @@ public class Graphic extends JFrame {
                 }
             );
 
-            Chromosome winner = (Chromosome) result.getBest();
+            bestChromosome = (Chromosome) result.getBest();
+            
             SwingUtilities.invokeLater(() -> {
-                txtPhenotype.setText(winner.getTree().toString());
-                startSimulation(winner);
+            	String ast = formatAST(bestChromosome.getTree(), 0);
+            	double fitness = bestChromosome.getFitness(); // ajusta si el método se llama distinto
+
+            	txtPhenotype.setText(
+            	    "FITNESS: " + fitness + "\n\n" +
+            	    ast
+            	);
                 btnEvolve.setEnabled(true);
+                btnRunSim.setEnabled(true); 
             });
         }).start();
     }
 
+    private void runSimulation() {
+        if (bestChromosome == null) return;
+        if (animationTimer != null) animationTimer.stop();
+        
+        startSimulation(bestChromosome);
+    }
+
     private void startSimulation(Chromosome best) {
-        // Reset a fresh context for visual display
         Contexto simCtx = new Contexto((Integer) spSeed.getValue(), 15, 15);
         contextPanel.setContext(simCtx);
         List<Pair> trail = new ArrayList<>();
+        trail.add(new Pair(simCtx.getCoordenadas().x(), simCtx.getCoordenadas().y()));
         
-        animationTimer = new Timer(100, e -> {
-            if (simCtx.leerSensor(Sensor.NIVEL_ENERGIA) <= 0 || simCtx.getTicks() >= 150) {
+        animationTimer = new Timer(400, e -> {
+            if (!simCtx.estaVivo() || simCtx.getTicks() >= 150) {
                 ((Timer)e.getSource()).stop();
+
+                // NUEVO: mensaje de fin
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Simulación finalizada",
+                    "Fin",
+                    JOptionPane.INFORMATION_MESSAGE
+                );
                 return;
             }
-            
-            // Execute one step of the AST
+
+            simCtx.setAccionTomada(false);
+
             best.getTree().ejecutar(simCtx);
             trail.add(new Pair(simCtx.getCoordenadas().x(), simCtx.getCoordenadas().y()));
-            
+
             contextPanel.updateTrail(trail);
             contextPanel.repaint();
         });

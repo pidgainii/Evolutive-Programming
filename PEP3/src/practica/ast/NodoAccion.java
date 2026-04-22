@@ -13,8 +13,11 @@ public class NodoAccion extends NodoAST {
 	
 	@Override
 	public void ejecutar(Contexto contexto) {
-		contexto.ejecutarAccion(this.accion);
-		
+		if (!contexto.getAccionTomada()) {
+			contexto.ejecutarAccion(this.accion);
+			contexto.setAccionTomada(true);
+		}
+		else contexto.addAccion(accion);
 	}
 
 	@Override
@@ -25,6 +28,29 @@ public class NodoAccion extends NodoAST {
 	@Override
 	public NodoAST deepCopy() {
 	    return new NodoAccion(this.accion);
+	}
+	
+	@Override
+    public NodoAST getSubtree(int[] contador, int objetivo) {
+        if (contador[0] == objetivo) return this;
+        contador[0]++;
+        return null;
+    }
+
+    @Override
+    public NodoAST replaceSubtree(int[] contador, int objetivo, NodoAST reemplazo) {
+        if (contador[0] == objetivo) return reemplazo.deepCopy();
+        contador[0]++;
+        return new NodoAccion(this.accion);
+    }
+
+	@Override
+	public boolean isLeaf() {
+		return true;
+	}
+
+	public Accion getAccion() {
+		return this.accion;
 	}
 	
 }

@@ -17,6 +17,12 @@ public class Contexto {
 	// este array nos será útil para saber si el rover está "mareado"
 	private ArrayList<Accion> ultimasAcciones;
 	
+	// este array nos será util para poder ejecutar un nodo bloque
+	// si una accion ya se ha ejecutado, el nodo bloque añadira las acciones
+	// que le queden por "ejecutar" a este array.
+	// Asi, el contexto verá que hay acciones pendientes por ejecutar y las ejecutará en los siguientes ticks.
+	private ArrayList<Accion> accionesPendientes;
+	
 	// ENTORNO
 	private int map[][];
 	private final int ANCHO;
@@ -31,6 +37,9 @@ public class Contexto {
 	private int recompensaVisual;
 	private int pisadasArena;
 	
+	// Accion tomada
+	private boolean accionTomada;
+	
 	
 	public Contexto(int seed, int ANCHO, int ALTO) {
 		
@@ -42,33 +51,33 @@ public class Contexto {
 		this.vivo = true;
 		
 		this.ultimasAcciones = new ArrayList<Accion>();
-		
+		this.accionesPendientes = new ArrayList<Accion>();
 		
 		
 		
 		//////////////////////////// ENTORNO ////////////////////////////
 		this.ANCHO = ANCHO;
-		this.ALTO = ALTO;
-		
-		
-	 	map = new int[ANCHO][ALTO];
-	 	visitado = new boolean[ANCHO][ALTO];
-	 	
-        Random rand = new Random(seed); 
+	    this.ALTO = ALTO;
+	    
+	    // map[width][height] -> map[x][y]
+	    map = new int[ANCHO][ALTO];
+	    visitado = new boolean[ANCHO][ALTO];
+	    
+	    Random rand = new Random(seed); 
+	    
+	    for (int x = 0; x < ANCHO; x++) {
+	        for (int y = 0; y < ALTO; y++) {
+	            map[y][x] = 0;
+	            if (x == 0 || x == ANCHO - 1 || y == 0 || y == ALTO - 1) map[y][x] = 1;
+	            else if (rand.nextDouble() < 0.15 && (x != 1 || y != 1)) map[y][x] = 1;
+	            else if (rand.nextDouble() < 0.15 && (x != 1 || y != 1)) map[y][x] = 3; 
+	            else if (rand.nextDouble() < 0.08 && (x != 1 || y != 1)) map[y][x] = 2; 
+	            
+	            visitado[y][x] = false;
+	        }
+	    }
         
-        // 1  muro     2  arena   3  muestra
-        for (int i = 0; i < ALTO; i++) {
-            for (int j = 0; j < ANCHO; j++) {
-            	map[i][j] = 0;
-                if (i == 0 || i == ALTO - 1 || j == 0 || j == ANCHO - 1) map[i][j] = 1;
-                else  if (rand.nextDouble() < 0.15 && (i != 1 || j != 1)) map[i][j] = 1;
-                else  if (rand.nextDouble() < 0.15 && (i != 1 || j != 1)) map[i][j] = 3; 
-                else  if (rand.nextDouble() < 0.08 && (i != 1 || j != 1)) map[i][j] = 2; 
-                
-                visitado[i][j] = false;
-            }
-        }
-        
+	    this.visitado[1][1] = true;
         
         
         ////////////////////////// ESTADISTICAS //////////////////////////
@@ -78,6 +87,8 @@ public class Contexto {
         this.exploracion = 0;
         this.recompensaVisual = 0;
         this.pisadasArena = 0;
+        
+        this.accionTomada = false;
         
 	}
 	
@@ -135,6 +146,13 @@ public class Contexto {
 	}
 
 	public void ejecutarAccion(Accion accion) {
+		if (!accionesPendientes.isEmpty()) {
+			// FIFO
+			accion = accionesPendientes.get(0);
+			accionesPendientes.remove(0);
+		}
+		
+		
 		if (accion == Accion.AVANZAR) {
 			Pair casillaContigua = this.casillaContigua(this.direccion);
 			if (this.casillaValida(casillaContigua)) {
@@ -181,13 +199,16 @@ public class Contexto {
 				this.energia -= 20;
 			}
 			this.girarAgente(accion);
+			this.energia -= 1;
 		}
 		
 		this.ultimasAcciones.add(accion);
+		
+		this.ticks++;
+		
+		if (this.energia<=0) this.vivo = false;
 	}
 	
-	
-	// TODO: Comprobar que esto se está haciendo bien
 	private Pair casillaContigua(Direccion direccion) {
 		if (direccion == Direccion.NORTE) {
 			return new Pair(this.coordenadas.x(), this.coordenadas.y()-1);
@@ -204,10 +225,13 @@ public class Contexto {
 	}
 	
 	private boolean casillaValida(Pair casilla) {
-		if (casilla.x()<0 || casilla.x()>=this.map.length || casilla.y()<0 || casilla.y()>=this.map[0].length) {
-			return false;
-		}
-		return true;
+	    // x debe compararse con el primer índice (Ancho)
+	    // y debe compararse con el segundo índice (Alto)
+	    if (casilla.x() < 0 || casilla.x() >= this.ANCHO || 
+	        casilla.y() < 0 || casilla.y() >= this.ALTO) {
+	        return false;
+	    }
+	    return true;
 	}
 	
 	private boolean mareado(Accion accion) {
@@ -241,6 +265,61 @@ public class Contexto {
 	        }
 	    }
 	}
+	
+    public Contexto copy() {
+        Contexto copia = new Contexto(0, this.ANCHO, this.ALTO); // La semilla da igual aquí
+        
+        // Copiar AGENTE
+        copia.coordenadas = new Pair(this.coordenadas.x(), this.coordenadas.y());
+        copia.direccion = this.direccion;
+        copia.energia = this.energia;
+        copia.vivo = this.vivo;
+        copia.ultimasAcciones = new ArrayList<>(this.ultimasAcciones);
+        
+        // Copiar ENTORNO (Deep copy de los arrays)
+        for (int i = 0; i < ANCHO; i++) {
+            copia.map[i] = this.map[i].clone();
+            copia.visitado[i] = this.visitado[i].clone();
+        }
+        
+        // Copiar ESTADISTICAS
+        copia.ticks = this.ticks;
+        copia.muestras = this.muestras;
+        copia.colisiones = this.colisiones;
+        copia.exploracion = this.exploracion;
+        copia.recompensaVisual = this.recompensaVisual;
+        copia.pisadasArena = this.pisadasArena;
+        copia.accionTomada = this.accionTomada;
+        
+        return copia;
+    }
+
+    public void reset(int energiaInicial) {
+        // Reset Agente
+        this.coordenadas = new Pair(1, 1);
+        this.direccion = Direccion.ESTE;
+        this.energia = energiaInicial;
+        this.vivo = true;
+        this.ultimasAcciones.clear();
+        
+        // Reset Estadísticas
+        this.ticks = 0;
+        this.muestras = 0;
+        this.colisiones = 0;
+        this.exploracion = 1; // La casilla (1,1) ya cuenta como explorada al empezar
+        this.recompensaVisual = 0;
+        this.pisadasArena = 0;
+        this.accionTomada = false;
+        
+        // Limpiar matriz de visitados
+        for (int i = 0; i < ANCHO; i++) {
+            for (int j = 0; j < ALTO; j++) {
+                this.visitado[i][j] = (i == 1 && j == 1);
+            }
+        }
+        
+        this.visitado[1][1] = true;
+    }
 
 
 
@@ -283,6 +362,27 @@ public class Contexto {
 	
 	public int getTicks() {
 		return this.ticks;
+	}
+	
+	public Direccion getDireccion() {
+		return this.direccion;
+	}
+	
+	
+	public boolean getAccionTomada() {
+		return this.accionTomada;
+	}
+	
+	public void setAccionTomada(boolean accionTomada) {
+		this.accionTomada = accionTomada;
+	}
+	
+	public boolean estaVivo() {
+		return this.vivo;
+	}
+	
+	public void addAccion(Accion accion) {
+		this.accionesPendientes.add(accion);
 	}
 }
 

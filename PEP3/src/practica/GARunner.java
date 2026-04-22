@@ -18,6 +18,7 @@ public class GARunner {
             double probC,
             double probM,
             double elitismo,
+            String tipoSeleccion,
             String tipoMutacion,
             int profundidad,
             double bloating,
@@ -28,6 +29,6 @@ public class GARunner {
         Evolution evo = new Evolution(fitness, tam_poblacion);
 
         // Ya no enviamos selección ni cruce porque ahora son fijos en Evolution
-        return evo.evolveWithListener(generaciones, pop, elitismo, probC, probM, tipoMutacion, listener);
+        return evo.evolveWithListener(generaciones, pop, elitismo, probC, probM, tipoSeleccion, tipoMutacion, listener);
     }
 }

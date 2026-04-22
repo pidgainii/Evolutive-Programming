@@ -1,9 +1,5 @@
 package practica.real;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Random;
-
 import practica.ast.NodoAST;
 
 public class Chromosome {
@@ -15,8 +11,6 @@ public class Chromosome {
     private double relative_fitness;
     
     public Chromosome(Chromosome other) {
-        // CRITICAL: You must clone the tree, not just copy the reference!
-        // Assuming your NodoAST has a copy() or clone() method
         if (other.tree != null) {
             this.tree = other.tree.deepCopy(); 
         }

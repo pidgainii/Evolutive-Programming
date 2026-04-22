@@ -6,14 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import practica.real.Contexto;
-import practica.real.Chromosome;
 import practica.real.Pair;
+import practica.enums.Direccion; // Asegúrate de importar el Enum
 
 public class ContextPanel extends JPanel {
     
     private final Color BG_DARK = new Color(18, 18, 18);
-    private final Color PANEL_DARK = new Color(30, 30, 30);
-    private final Color TEXT_LIGHT = new Color(220, 220, 220);
     private final Color ACCENT_CYAN = new Color(0, 255, 255);
     
     private Contexto contexto;
@@ -40,62 +38,85 @@ public class ContextPanel extends JPanel {
         if (contexto == null) return;
 
         Graphics2D g2 = (Graphics2D) g;
-        // Nota: Asegúrate de tener getAlto(), getAncho() y getMap() en Contexto.java
-        int rows = contexto.getAlto();
-        int cols = contexto.getAncho();
-        int[][] map = contexto.getMap();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // USAR x para Ancho e y para Alto
+        int ancho = contexto.getAncho();
+        int alto = contexto.getAlto();
+        int[][] map = contexto.getMap(); // Ahora es [ancho][alto]
         
-        int cellSize = Math.min(getWidth() / cols, getHeight() / rows);
+        int cellSize = Math.min(getWidth() / ancho, getHeight() / alto);
 
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                int x = j * cellSize;
-                int y = i * cellSize;
-                int val = map[i][j];
+        for (int x = 0; x < ancho; x++) {
+            for (int y = 0; y < alto; y++) {
+                int drawX = x * cellSize;
+                int drawY = y * cellSize;
+                int val = map[x][y]; // Acceso correcto [x][y]
 
-                // Dibujar celda base (Suelo oscuro)
+                // Dibujar celda base
                 g2.setColor(new Color(25, 25, 25));
-                g2.fillRect(x, y, cellSize, cellSize);
+                g2.fillRect(drawX, drawY, cellSize, cellSize);
                 
-                if (val == 1) { // MURO (Rojo con Aspas)
+                if (val == 1) { // MURO
                     g2.setColor(new Color(120, 0, 0));
-                    g2.fillRect(x, y, cellSize, cellSize);
+                    g2.fillRect(drawX, drawY, cellSize, cellSize);
                     g2.setColor(new Color(200, 0, 0));
-                    g2.drawRect(x, y, cellSize, cellSize);
-                    g2.drawLine(x, y, x + cellSize, y + cellSize);
-                    g2.drawLine(x + cellSize, y, x, y + cellSize);
-                } else if (val == 2) { // ARENA (Naranja/Marrón)
+                    g2.drawRect(drawX, drawY, cellSize, cellSize);
+                } else if (val == 2) { // ARENA
                     g2.setColor(new Color(180, 110, 40));
-                    g2.fillRect(x + 2, y + 2, cellSize - 4, cellSize - 4);
-                } else if (val == 3) { // MUESTRA (Punto Amarillo)
+                    g2.fillRect(drawX + 2, drawY + 2, cellSize - 4, cellSize - 4);
+                } else if (val == 3) { // MUESTRA
                     g2.setColor(Color.YELLOW);
                     int r = cellSize / 3;
-                    g2.fillOval(x + cellSize/2 - r/2, y + cellSize/2 - r/2, r, r);
+                    g2.fillOval(drawX + cellSize/2 - r/2, drawY + cellSize/2 - r/2, r, r);
                 }
                 
-                // Dibujar rejilla tenue
                 g2.setColor(new Color(40, 40, 40));
-                g2.drawRect(x, y, cellSize, cellSize);
+                g2.drawRect(drawX, drawY, cellSize, cellSize);
             }
         }
 
-        // DIBUJAR RASTRO (HUELLAS)
-        g2.setColor(new Color(0, 200, 200, 150));
+        // DIBUJAR RASTRO
+        g2.setColor(new Color(0, 255, 255, 100));
         for (Pair p : trail) {
-            int tx = p.y() * cellSize + cellSize/2 - 2;
-            int ty = p.x() * cellSize + cellSize/2 - 2;
+            // p.x() es la columna, p.y() es la fila
+            int tx = p.x() * cellSize + cellSize/2 - 2;
+            int ty = p.y() * cellSize + cellSize/2 - 2;
             g2.fillOval(tx, ty, 4, 4);
         }
 
-        // DIBUJAR ROVER (Triángulo Cian)
-        // Nota: Asegúrate de tener getCoordenadas() en Contexto.java
+        // DIBUJAR ROVER ORIENTADO
         Pair pos = contexto.getCoordenadas(); 
-        if (pos != null) {
+        practica.enums.Direccion dir = contexto.getDireccion();
+
+        if (pos != null && dir != null) {
             g2.setColor(ACCENT_CYAN);
-            int rx = pos.y() * cellSize;
-            int ry = pos.x() * cellSize;
-            int[] px = {rx + 5, rx + cellSize - 5, rx + cellSize / 2};
-            int[] py = {ry + cellSize - 5, ry + cellSize - 5, ry + 5};
+            int rx = pos.x() * cellSize;
+            int ry = pos.y() * cellSize;
+            
+            int p = 5; // padding
+            int[] px = new int[3];
+            int[] py = new int[3];
+
+            // Definir vértices según dirección
+            switch (dir) {
+                case NORTE -> {
+                    px = new int[]{rx + p, rx + cellSize - p, rx + cellSize / 2};
+                    py = new int[]{ry + cellSize - p, ry + cellSize - p, ry + p};
+                }
+                case SUR -> {
+                    px = new int[]{rx + p, rx + cellSize - p, rx + cellSize / 2};
+                    py = new int[]{ry + p, ry + p, ry + cellSize - p};
+                }
+                case ESTE -> {
+                    px = new int[]{rx + p, rx + p, rx + cellSize - p};
+                    py = new int[]{ry + p, ry + cellSize - p, ry + cellSize / 2};
+                }
+                case OESTE -> {
+                    px = new int[]{rx + cellSize - p, rx + cellSize - p, rx + p};
+                    py = new int[]{ry + p, ry + cellSize - p, ry + cellSize / 2};
+                }
+            }
             g2.fillPolygon(px, py, 3);
         }
     }
