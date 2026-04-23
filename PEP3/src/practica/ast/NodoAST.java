@@ -14,4 +14,6 @@ public abstract class NodoAST {
     public abstract NodoAST replaceSubtree(int[] contador, int objetivo, NodoAST reemplazo);
     
     public abstract boolean isLeaf();
+    
+    public abstract int profundidad();
 }

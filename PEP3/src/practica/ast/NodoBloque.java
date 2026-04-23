@@ -67,5 +67,25 @@ public class NodoBloque extends NodoAST {
 	public boolean isLeaf() {
 		return false;
 	}
+	
+	@Override
+	public int profundidad() {
+	    int maxProfHijos = 0;
+	    
+	    if (this.hijos != null) {
+	        for (NodoAST hijo : this.hijos) {
+	            int profHijo = hijo.profundidad();
+	            if (profHijo > maxProfHijos) {
+	                maxProfHijos = profHijo;
+	            }
+	        }
+	    }
+	    
+	    return 1 + maxProfHijos;
+	}
+
+	public NodoAST[] getHijos() {
+		return this.hijos;
+	}
 
 }

@@ -20,7 +20,7 @@ public class Fitness {
         double f3 = this.evaluate_base(individual, this.c3);
         
         // Penalización por tamaño del árbol para evitar que crezca sin control
-        double bloating_penalization = individual.getTree().tam() * this.bloating * 7;
+        double bloating_penalization = individual.getTree().tam() * this.bloating * 10;
         
         double final_fitness =  ((f1 + f2 + f3) / 3.0) - bloating_penalization;
         

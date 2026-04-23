@@ -52,5 +52,10 @@ public class NodoAccion extends NodoAST {
 	public Accion getAccion() {
 		return this.accion;
 	}
+
+	@Override
+	public int profundidad() {
+		return 1;
+	}
 	
 }

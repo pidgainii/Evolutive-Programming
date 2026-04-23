@@ -71,5 +71,21 @@ public class NodoCondicional extends NodoAST {
 	
 	public NodoAST getHijoIzquierdo() { return this.hijoIzquierdo; }
 	public NodoAST getHijoDerecho() { return this.hijoDerecho; }
+	
+	@Override
+	public int profundidad() {
+	    int profIzq = (hijoIzquierdo != null) ? hijoIzquierdo.profundidad() : 0;
+	    int profDer = (hijoDerecho != null) ? hijoDerecho.profundidad() : 0;
+	    
+	    return 1 + Math.max(profIzq, profDer);
+	}
+
+	public Sensor getSensor() {
+		return this.sensor;
+	}
+
+	public int getUmbral() {
+		return this.umbral;
+	}
 
 }

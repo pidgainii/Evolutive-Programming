@@ -33,10 +33,10 @@ public class Graphic extends JFrame {
     private final JSpinner spPop = new JSpinner(new SpinnerNumberModel(300, 2, 5000, 10));
     private final JSpinner spGen = new JSpinner(new SpinnerNumberModel(300, 1, 10000, 10));
     private final JSpinner spPc = new JSpinner(new SpinnerNumberModel(0.6, 0.0, 1.0, 0.05));
-    private final JSpinner spPm = new JSpinner(new SpinnerNumberModel(0.1, 0.0, 1.0, 0.01));
-    private final JSpinner spElit = new JSpinner(new SpinnerNumberModel(0.15, 0.0, 1.0, 0.05));
+    private final JSpinner spPm = new JSpinner(new SpinnerNumberModel(0.2, 0.0, 1.0, 0.01));
+    private final JSpinner spElit = new JSpinner(new SpinnerNumberModel(0.05, 0.0, 1.0, 0.05));
     private final JSpinner spMaxDepth = new JSpinner(new SpinnerNumberModel(5, 2, 20, 1));
-    private final JSpinner spBloat = new JSpinner(new SpinnerNumberModel(0.5, 0.0, 5.0, 0.1));
+    private final JSpinner spBloat = new JSpinner(new SpinnerNumberModel(1.0, 0.0, 5.0, 0.1));
     private final JSpinner spSeed = new JSpinner(new SpinnerNumberModel(3000, 0, Integer.MAX_VALUE, 1));
 
     // NUEVO: Combo box para el método de selección
@@ -59,7 +59,7 @@ public class Graphic extends JFrame {
     private Chromosome bestChromosome = null;
 
     public Graphic() {
-        super("Lunar Rover GP - Progra Evolutiva 25/26");
+        super("PE3: Rover Lunar");
         setupTheme();
         this.contextPanel = new ContextPanel(null);
 
