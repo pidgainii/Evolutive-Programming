@@ -40,10 +40,9 @@ public class ContextPanel extends JPanel {
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // USAR x para Ancho e y para Alto
         int ancho = contexto.getAncho();
         int alto = contexto.getAlto();
-        int[][] map = contexto.getMap(); // Ahora es [ancho][alto]
+        int[][] map = contexto.getMap();
         
         int cellSize = Math.min(getWidth() / ancho, getHeight() / alto);
 
@@ -51,17 +50,24 @@ public class ContextPanel extends JPanel {
             for (int y = 0; y < alto; y++) {
                 int drawX = x * cellSize;
                 int drawY = y * cellSize;
-                int val = map[x][y]; // Acceso correcto [x][y]
+                int val = map[x][y];
 
                 // Dibujar celda base
                 g2.setColor(new Color(25, 25, 25));
                 g2.fillRect(drawX, drawY, cellSize, cellSize);
                 
                 if (val == 1) { // MURO
+                    // Fondo rojo oscuro
                     g2.setColor(new Color(120, 0, 0));
                     g2.fillRect(drawX, drawY, cellSize, cellSize);
+                    
+                    // Color para los bordes y la X
                     g2.setColor(new Color(200, 0, 0));
                     g2.drawRect(drawX, drawY, cellSize, cellSize);
+                    
+                    // Dibujar la X (Líneas diagonales)
+                    g2.drawLine(drawX, drawY, drawX + cellSize, drawY + cellSize); // De arriba-izq a abajo-der
+                    g2.drawLine(drawX + cellSize, drawY, drawX, drawY + cellSize); // De arriba-der a abajo-izq
                 } else if (val == 2) { // ARENA
                     g2.setColor(new Color(180, 110, 40));
                     g2.fillRect(drawX + 2, drawY + 2, cellSize - 4, cellSize - 4);
@@ -98,7 +104,6 @@ public class ContextPanel extends JPanel {
             int[] px = new int[3];
             int[] py = new int[3];
 
-            // Definir vértices según dirección
             switch (dir) {
                 case NORTE -> {
                     px = new int[]{rx + p, rx + cellSize - p, rx + cellSize / 2};

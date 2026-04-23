@@ -28,7 +28,6 @@ public class GARunner {
         Population pop = new Population(fitness, tam_poblacion, 1, profundidad);
         Evolution evo = new Evolution(fitness, tam_poblacion);
 
-        // Ya no enviamos selección ni cruce porque ahora son fijos en Evolution
         return evo.evolveWithListener(generaciones, pop, elitismo, probC, probM, tipoSeleccion, tipoMutacion, listener);
     }
 }

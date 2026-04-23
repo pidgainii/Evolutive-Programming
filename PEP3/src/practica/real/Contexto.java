@@ -177,10 +177,6 @@ public class Contexto {
 				}
 				// SUELO NORMAL
 				else {
-					/*
-					 * Zona libre. Moverse cuesta –1 de energía. Pisarla por
-					 * primera vez suma exploración.
-					 */
 					this.coordenadas = casillaContigua;
 					this.energia -= 1;
 				}
@@ -202,8 +198,11 @@ public class Contexto {
 			this.energia -= 1;
 		}
 		
-		this.ultimasAcciones.add(accion);
+		if (this.veMuestra()) {
+	        this.recompensaVisual += 1;
+	    }
 		
+		this.ultimasAcciones.add(accion);
 		this.ticks++;
 		
 		if (this.energia<=0) this.vivo = false;
@@ -225,8 +224,6 @@ public class Contexto {
 	}
 	
 	private boolean casillaValida(Pair casilla) {
-	    // x debe compararse con el primer índice (Ancho)
-	    // y debe compararse con el segundo índice (Alto)
 	    if (casilla.x() < 0 || casilla.x() >= this.ANCHO || 
 	        casilla.y() < 0 || casilla.y() >= this.ALTO) {
 	        return false;
@@ -236,16 +233,16 @@ public class Contexto {
 	
 	private boolean mareado(Accion accion) {
 	    if (this.ultimasAcciones.size() < 3) {
-	        return false; // not enough elements
+	        return false;
 	    }
 
 	    for (int i = this.ultimasAcciones.size() - 1; i >= this.ultimasAcciones.size() - 3; i--) {
 	        if (this.ultimasAcciones.get(i) != accion) {
-	            return false; // one doesn't match → fail immediately
+	            return false;
 	        }
 	    }
 
-	    return true; // all last 3 match
+	    return true;
 	}
 	
 	private void girarAgente(Accion accion) {
@@ -266,8 +263,12 @@ public class Contexto {
 	    }
 	}
 	
+	private boolean veMuestra() {
+	    return leerSensor(Sensor.DIST_MUESTRA) < 100;
+	}
+	
     public Contexto copy() {
-        Contexto copia = new Contexto(0, this.ANCHO, this.ALTO); // La semilla da igual aquí
+        Contexto copia = new Contexto(0, this.ANCHO, this.ALTO);
         
         // Copiar AGENTE
         copia.coordenadas = new Pair(this.coordenadas.x(), this.coordenadas.y());

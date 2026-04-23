@@ -33,16 +33,13 @@ public class Population {
     private ArrayList<Chromosome> InicializarPoblacionRampedHalfAndHalf(int population_size, int profMin, int profMax, Fitness fitness) {
         ArrayList<Chromosome> population = new ArrayList<Chromosome>();
         
-        // 1. Calculate number of levels (inclusive)
         int numNiveles = (profMax - profMin + 1);
         int individuosPorNivel = population_size / numNiveles;
         
-        // 2. Iterate through each depth level
         for (int p = profMin; p <= profMax; p++) {
             for (int i = 0; i < individuosPorNivel; i++) {
                 NodoAST nuevoArbol;
                 
-                // Standard Ramped Half-and-Half: 50% Full, 50% Grow
                 if (i < individuosPorNivel / 2) {
                     nuevoArbol = this.generarArbolFull(0, p);
                 } else {
@@ -50,15 +47,12 @@ public class Population {
                 }
                 
                 Chromosome individuo = new Chromosome(nuevoArbol);
-                // Note: evaluate_final handles the 3-map average + bloating as per requirements
                 individuo.setFitness(fitness.evaluate_final(individuo));
                 population.add(individuo);
             }
         }
-        
-        // 3. FILL THE GAP (The Remainder)
-        // If population_size was 300 and levels were 4, 300/4 is 75 (perfect).
-        // But if it was 299, you'd be missing individuals. This ensures you hit exactly the target.
+
+        // Para rellenar la poblacion (salen menos con el codigo de antes)
         while (population.size() < population_size) {
             NodoAST extra = this.generarArbolGrow(0, profMax);
             Chromosome extraInd = new Chromosome(extra);
@@ -71,7 +65,6 @@ public class Population {
     
     private NodoAST generarArbolFull(int profActual, int profMax) {
     	if (profActual == profMax) {
-    		// Seleccionamos una Accion aleatoria
     		Random random = new Random();
             Accion[] acciones = Accion.values();
             Accion accion = acciones[random.nextInt(acciones.length)];
@@ -109,7 +102,6 @@ public class Population {
     
     private NodoAST generarArbolGrow(int profActual, int profMax) {
     	if (profActual == profMax) {
-    		// Seleccionamos una Accion aleatoria
     		Random random = new Random();
             Accion[] acciones = Accion.values();
             Accion accion = acciones[random.nextInt(acciones.length)];

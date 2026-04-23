@@ -178,35 +178,40 @@ public class Graphic extends JFrame {
     }
     
     private String formatAST(NodoAST nodo, int nivel) {
-        String indent = " ".repeat(nivel * 2);
+        String indent = "  ".repeat(nivel);
 
+        // --- CASO 1: BLOQUE DE CÓDIGO ---
         if (nodo instanceof NodoBloque bloque) {
             StringBuilder sb = new StringBuilder();
+            sb.append(indent).append("{\n"); 
+
             for (NodoAST hijo : bloque.hijos) {
-                sb.append(formatAST(hijo, nivel));
+                sb.append(formatAST(hijo, nivel + 1));
             }
-            return sb.toString();
-        }
-
-        if (nodo instanceof NodoCondicional cond) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(indent).append("IF ( ")
-              .append(cond.sensor)
-              .append(" > ")
-              .append(cond.umbral)
-              .append(" ) {\n");
-
-            sb.append(formatAST(cond.getHijoIzquierdo(), nivel + 1));
-
-            sb.append(indent).append("} ELSE {\n");
-
-            sb.append(formatAST(cond.getHijoDerecho(), nivel + 1));
 
             sb.append(indent).append("}\n");
+            return sb.toString();
+        }
+
+        // --- CASO 2: CONDICIONAL (IF-ELSE) ---
+        if (nodo instanceof NodoCondicional cond) {
+            StringBuilder sb = new StringBuilder();
+            
+            // Cabecera del IF (indented)
+            sb.append(indent).append("IF ( ")
+              .append(cond.sensor).append(" > ").append(cond.umbral)
+              .append(" )\n");
+
+            sb.append(formatAST(cond.getHijoIzquierdo(), nivel));
+
+            sb.append(indent).append("ELSE\n");
+
+            sb.append(formatAST(cond.getHijoDerecho(), nivel));
 
             return sb.toString();
         }
 
+        // --- CASO 3: ACCIÓN SIMPLE (HOJA) ---
         if (nodo instanceof NodoAccion acc) {
             return indent + acc.getAccion() + "();\n";
         }
@@ -230,7 +235,6 @@ public class Graphic extends JFrame {
     }
 
     private void runEvolution() {
-        // SOLUCIÓN AL BUG: Re-creamos los mapas para limpiarlos antes de evolucionar de nuevo
         int seed = (Integer) spSeed.getValue();
         this.c1 = new Contexto(seed, 15, 15);
         this.c2 = new Contexto(seed + 1, 15, 15);
@@ -243,7 +247,6 @@ public class Graphic extends JFrame {
         btnRunSim.setEnabled(false);
         
         new Thread(() -> {
-            // NOTA: Recuerda actualizar el método GARunner.run() para que acepte el nuevo String de selMethod
             GAResult result = GARunner.run(
                 c1, c2, c3, (Integer)spPop.getValue(), (Integer)spGen.getValue(), 
                 (Double)spPc.getValue(), (Double)spPm.getValue(), (Double)spElit.getValue(), 
@@ -262,10 +265,13 @@ public class Graphic extends JFrame {
             
             SwingUtilities.invokeLater(() -> {
             	String ast = formatAST(bestChromosome.getTree(), 0);
-            	double fitness = bestChromosome.getFitness(); // ajusta si el método se llama distinto
+            	double fitness = bestChromosome.getFitness();
 
+            	int tamanoAST = bestChromosome.getTree().tam();
+            	
             	txtPhenotype.setText(
-            	    "FITNESS: " + fitness + "\n\n" +
+            		"FITNESS: " + fitness + "\n" +
+            		"TAMAÑO AST: " + tamanoAST + " nodos\n\n" +
             	    ast
             	);
                 btnEvolve.setEnabled(true);
@@ -291,7 +297,6 @@ public class Graphic extends JFrame {
             if (!simCtx.estaVivo() || simCtx.getTicks() >= 150) {
                 ((Timer)e.getSource()).stop();
 
-                // NUEVO: mensaje de fin
                 JOptionPane.showMessageDialog(
                     this,
                     "Simulación finalizada",

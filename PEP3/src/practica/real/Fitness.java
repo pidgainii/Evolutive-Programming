@@ -20,13 +20,14 @@ public class Fitness {
         double f3 = this.evaluate_base(individual, this.c3);
         
         // Penalización por tamaño del árbol para evitar que crezca sin control
-        double bloating_penalization = individual.getTree().tam() * this.bloating;
+        double bloating_penalization = individual.getTree().tam() * this.bloating * 7;
         
-        return (f1 + f2 + f3) / 3.0 - bloating_penalization;
+        double final_fitness =  ((f1 + f2 + f3) / 3.0) - bloating_penalization;
+        
+        return final_fitness;
     }
     
     public double evaluate_base(Chromosome individual, Contexto c_original) {
-        // Clonamos el contexto para no alterar el original en cada evaluación
         Contexto c = c_original.copy();
         
         while (c.estaVivo() && c.getTicks() < 150) {
@@ -35,13 +36,11 @@ public class Fitness {
             // Ejecuta la lógica del árbol (AST)
             individual.getTree().ejecutar(c);
             
-            // --- Salvaguarda contra bucles infinitos ---s
             if (c.getTicks() == ticksAntes) {
                 break;
             }
         }
         
-        // Cálculo de la puntuación basado en el rendimiento final
         double fitness_base = c.getMuestras() * 500 + 
                              c.getExploradas() * 20 +
                              c.getRecompensaVisual() * 2 - 

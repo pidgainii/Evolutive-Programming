@@ -2,7 +2,6 @@
 <qualifiedTypeNameHistroy>
     <fullyQualifiedTypeName name="practica.real.Chromosome"/>
     <fullyQualifiedTypeName name="practica.enums.Direccion"/>
-    <fullyQualifiedTypeName name="practica.ast.NodoAST"/>
     <fullyQualifiedTypeName name="practica.enums.Accion"/>
     <fullyQualifiedTypeName name="java.util.concurrent.ThreadLocalRandom"/>
     <fullyQualifiedTypeName name="practica.real.Contexto"/>
@@ -10,4 +9,8 @@
     <fullyQualifiedTypeName name="java.util.ArrayList"/>
     <fullyQualifiedTypeName name="practica.enums.Sensor"/>
     <fullyQualifiedTypeName name="practica.enums.SelectionMethod"/>
+    <fullyQualifiedTypeName name="practica.ast.NodoAccion"/>
+    <fullyQualifiedTypeName name="practica.ast.NodoCondicional"/>
+    <fullyQualifiedTypeName name="practica.ast.NodoBloque"/>
+    <fullyQualifiedTypeName name="practica.ast.NodoAST"/>
 </qualifiedTypeNameHistroy>

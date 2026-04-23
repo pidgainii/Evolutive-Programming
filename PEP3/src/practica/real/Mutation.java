@@ -12,9 +12,6 @@ import practica.ast.*;
 public class Mutation {
 
     public static void mutate(MutationMethod mth, Chromosome ind, Random rand, double pm) {
-        // En tu Evolution.java ya haces el "if (rand.nextDouble() < pm)", 
-        // así que si llegamos aquí, ES SEGURO que hay que mutar.
-
         // Si es aleatoria, elegimos una de las 4 principales
         if (mth == MutationMethod.ALEATORIA) {
             MutationMethod[] methods = {
@@ -68,12 +65,7 @@ public class Mutation {
         }
     }
 
-    // --- Utilidades Privadas ---
 
-    /**
-     * Recorre el árbol y devuelve una lista de índices que coincidan con 
-     * lo que buscamos (hojas o nodos internos).
-     */
     private static List<Integer> getIndices(NodoAST root, boolean wantLeaves) {
         List<Integer> indices = new ArrayList<>();
         int tam = root.tam();
@@ -86,18 +78,14 @@ public class Mutation {
         return indices;
     }
 
-    /**
-     * Altera un nodo interno sin cambiar su estructura de hijos.
-     */
+
     private static NodoAST mutateInternalNode(NodoAST node, Random rand) {
         if (node instanceof NodoCondicional) {
             NodoCondicional cond = (NodoCondicional) node;
             
-            // Alteramos el sensor y el umbral al azar (ajusta el límite de nextInt según tu dominio)
             Sensor nuevoSensor = Sensor.values()[rand.nextInt(Sensor.values().length)];
             int nuevoUmbral = rand.nextInt(100); 
 
-            // Devolvemos el nodo con los valores mutados, pero CON LOS MISMOS HIJOS
             return new NodoCondicional(
                 nuevoSensor, 
                 nuevoUmbral, 
@@ -105,16 +93,12 @@ public class Mutation {
                 cond.getHijoDerecho().deepCopy()
             );
         } else if (node instanceof NodoBloque) {
-            // NodoBloque solo delega ejecución. Podrías mezclar (shuffle) sus hijos aquí si quisieras,
-            // pero para no alterar la estructura, simplemente lo clonamos.
             return node.deepCopy();
         }
         return node.deepCopy();
     }
 
-    /**
-     * Genera un nuevo nodo terminal aleatorio.
-     */
+ 
     private static NodoAST mutateLeafNode(Random rand) {
         Accion nuevaAccion = Accion.values()[rand.nextInt(Accion.values().length)];
         return new NodoAccion(nuevaAccion);

@@ -22,10 +22,8 @@ public class Selection {
         }
     }
 
-    // ---- UPDATED METHODS: Higher Fitness = Better ----
 
     public static void roulette(Population actual, Population dest, int populationSize, Random rand) {
-        // Evolution.evaluateAndNormalize already sets Acum_fitness correctly for maximization
         for (int i = 0; i < populationSize; i++) {
             double prob = rand.nextDouble();
             int pos = 0;
@@ -53,7 +51,6 @@ public class Selection {
     }
 
     public static void stochasticUniversal(Population actual, Population dest, int populationSize, Random rand) {
-        // Evolution.evaluateAndNormalize already prepared Acum_fitness
         double step = 1.0 / populationSize;
         double start = rand.nextDouble() * step;
 
@@ -70,7 +67,6 @@ public class Selection {
 
     public static void truncation(Population actual, Population dest, int populationSize, double truncationRate, Random rand) {
         ArrayList<Chromosome> sorted = new ArrayList<>(actual.getPopulation());
-        // FIX: Sort descending (Best fitness first)
         sorted.sort((a, b) -> Double.compare(b.getFitness(), a.getFitness()));
 
         int cutoff = Math.max(1, (int) Math.floor(sorted.size() * truncationRate));
@@ -110,7 +106,6 @@ public class Selection {
         s = Math.max(1.0, Math.min(2.0, s));
         ArrayList<Chromosome> sorted = new ArrayList<>(actual.getPopulation());
         
-        // FIX: Sort ASCENDING so index 0 is worst, index n-1 is best
         sorted.sort(Comparator.comparingDouble(Chromosome::getFitness));
 
         int n = sorted.size();
@@ -118,7 +113,6 @@ public class Selection {
         double acc = 0.0;
 
         for (int i = 0; i < n; i++) {
-            // Linear Ranking formula: P(i) = (2-s)/n + 2*i*(s-1)/(n*(n-1))
             double p = ((2.0 - s) / n) + (2.0 * i * (s - 1.0) / (n * (n - 1.0)));
             acc += p;
             cum[i] = acc;

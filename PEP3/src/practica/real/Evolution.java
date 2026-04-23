@@ -22,7 +22,6 @@ public class Evolution {
     public void evaluateAndNormalize(Population population) {
         Chromosome localBest = null;
         
-        // 1. First pass: Evaluate fitness and find the local best
         for (Chromosome ind : population.getPopulation()) {
             ind.setFitness(fitness.evaluate_final(ind));
             if (localBest == null || ind.getFitness() > localBest.getFitness()) {
@@ -30,13 +29,10 @@ public class Evolution {
             }
         }
 
-        // 2. Update Global Best (Cloning is essential here)
         if (this.globalBest == null || localBest.getFitness() > globalBest.getFitness()) {
             this.globalBest = localBest.clone();
         }
 
-        // 3. Normalization for Roulette/Selection
-        // We shift fitness so the minimum is at least 1.0 (to handle negative fitness)
         double minFitness = population.getPopulation().stream()
                 .mapToDouble(Chromosome::getFitness).min().orElse(0.0);
         
@@ -53,11 +49,9 @@ public class Evolution {
             ind.setAcum_fitness(accumulated);
         }
         
-        // Ensure the last individual's accumulated fitness is exactly 1.0 to avoid precision errors
         population.getPopulation().get(population.getPopulation().size() - 1).setAcum_fitness(1.0);
     }
 
-    // MODIFICADO: Añadido "String selectionMethodString"
     public GAResult evolveWithListener(int nGenerations, Population population,
                                        double elitismRate, double pc, double pm, 
                                        String selectionMethodString,
@@ -70,7 +64,6 @@ public class Evolution {
         double[] globalBestSoFar = new double[nGenerations];
         double[] avgFitness = new double[nGenerations];
 
-        // Parseamos el método de selección dinámicamente
         SelectionMethod selMth = SelectionMethod.valueOf(selectionMethodString);
 
         for (int gen = 0; gen < nGenerations; gen++) {
@@ -79,7 +72,6 @@ public class Evolution {
 
             Population nextPop = new Population();
             
-            // Usamos el método de selección elegido por el usuario
             Selection.select(selMth, population, nextPop, population_size, rand);
 
             
