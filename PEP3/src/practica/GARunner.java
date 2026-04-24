@@ -21,6 +21,8 @@ public class GARunner {
             String tipoSeleccion,
             String tipoMutacion,
             int profundidad,
+            boolean poda,
+            int profPoda,
             double bloating,
             EvolutionListener listener) {
     
@@ -28,6 +30,6 @@ public class GARunner {
         Population pop = new Population(fitness, tam_poblacion, 1, profundidad);
         Evolution evo = new Evolution(fitness, tam_poblacion);
 
-        return evo.evolveWithListener(generaciones, pop, elitismo, probC, probM, tipoSeleccion, tipoMutacion, listener);
+        return evo.evolveWithListener(generaciones, pop, elitismo, probC, probM, tipoSeleccion, tipoMutacion, poda, profPoda, listener);
     }
 }

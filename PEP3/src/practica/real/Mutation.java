@@ -11,9 +11,7 @@ import practica.ast.*;
 
 public class Mutation {
 
-    private static final int MAX_PROFUNDIDAD = 10;
-
-    public static void mutate(MutationMethod mth, Chromosome ind, Random rand, double pm) {
+    public static void mutate(MutationMethod mth, Chromosome ind, Random rand, double pm, boolean poda, int profPoda) {
         if (mth == MutationMethod.ALEATORIA) {
             MutationMethod[] methods = {
                 MutationMethod.SUBARBOL, MutationMethod.FUNCIONAL, 
@@ -28,12 +26,15 @@ public class Mutation {
         switch (mth) {
             case SUBARBOL:
                 int point = rand.nextInt(tam);
-                NodoAST randomBranch = Generator.generarArbolGrow(0, 3);
+                NodoAST randomBranch = Utils.generarArbolGrow(0, 3);
                 root = root.replaceSubtree(new int[]{0}, point, randomBranch);
                 
-                if (root.profundidad() > MAX_PROFUNDIDAD) {
-                    root = podar(root, 1, MAX_PROFUNDIDAD, rand);
+                if (poda) {
+                	if (root.profundidad() > profPoda) {
+                        root = Utils.podar(root, 1, profPoda, rand);
+                    }
                 }
+                
                 ind.setTree(root);
                 break;
 
@@ -67,30 +68,6 @@ public class Mutation {
         }
     }
 
-    private static NodoAST podar(NodoAST nodo, int profActual, int profMax, Random rand) {
-        if (profActual >= profMax) {
-            if (!nodo.isLeaf()) {
-                Accion[] acciones = Accion.values();
-                return new NodoAccion(acciones[rand.nextInt(acciones.length)]);
-            }
-            return nodo;
-        }
-
-        if (nodo instanceof NodoBloque) {
-            NodoBloque bloque = (NodoBloque) nodo;
-            NodoAST[] hijos = bloque.getHijos();
-            for (int i = 0; i < hijos.length; i++) {
-                hijos[i] = podar(hijos[i], profActual + 1, profMax, rand);
-            }
-            return new NodoBloque(hijos);
-        } else if (nodo instanceof NodoCondicional) {
-            NodoCondicional cond = (NodoCondicional) nodo;
-            NodoAST izq = podar(cond.getHijoIzquierdo(), profActual + 1, profMax, rand);
-            NodoAST der = podar(cond.getHijoDerecho(), profActual + 1, profMax, rand);
-            return new NodoCondicional(cond.getSensor(), cond.getUmbral(), izq, der);
-        }
-        return nodo;
-    }
 
     private static List<Integer> getIndices(NodoAST root, boolean wantLeaves) {
         List<Integer> indices = new ArrayList<>();

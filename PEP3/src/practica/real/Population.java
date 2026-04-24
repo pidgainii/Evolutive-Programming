@@ -41,9 +41,9 @@ public class Population {
                 NodoAST nuevoArbol;
                 
                 if (i < individuosPorNivel / 2) {
-                    nuevoArbol = Generator.generarArbolFull(0, p);
+                    nuevoArbol = Utils.generarArbolFull(0, p);
                 } else {
-                    nuevoArbol = Generator.generarArbolGrow(0, p);
+                    nuevoArbol = Utils.generarArbolGrow(0, p);
                 }
                 
                 Chromosome individuo = new Chromosome(nuevoArbol);
@@ -54,7 +54,7 @@ public class Population {
 
         // Para rellenar la poblacion (salen menos con el codigo de antes)
         while (population.size() < population_size) {
-            NodoAST extra = Generator.generarArbolGrow(0, profMax);
+            NodoAST extra = Utils.generarArbolGrow(0, profMax);
             Chromosome extraInd = new Chromosome(extra);
             extraInd.setFitness(fitness.evaluate_final(extraInd));
             population.add(extraInd);

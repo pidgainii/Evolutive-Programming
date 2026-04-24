@@ -20,8 +20,6 @@ import practica.ast.NodoCondicional;
 import practica.real.Contexto;
 import practica.real.Chromosome;
 import practica.real.Pair;
-import practica.enums.Sensor;
-import practica.enums.SelectionMethod;
 
 public class Graphic extends JFrame {
 
@@ -39,7 +37,10 @@ public class Graphic extends JFrame {
     private final JSpinner spBloat = new JSpinner(new SpinnerNumberModel(1.0, 0.0, 5.0, 0.1));
     private final JSpinner spSeed = new JSpinner(new SpinnerNumberModel(3000, 0, Integer.MAX_VALUE, 1));
 
-    // NUEVO: Combo box para el método de selección
+    // NUEVOS: Checkbox y Spinner para Poda
+    private final JCheckBox chkPruning = new JCheckBox("Activar Poda", false);
+    private final JSpinner spPruneDepth = new JSpinner(new SpinnerNumberModel(3, 1, 15, 1));
+
     private final JComboBox<String> selMethod = new JComboBox<>(new String[]{"ROULETTE", "TOURNAMENT", "STOCHASTIC", "TRUNCATION", "REMAINDERS", "RANKING"});
     private final JComboBox<String> mutMethod = new JComboBox<>(new String[]{"SUBARBOL", "FUNCIONAL", "TERMINAL", "HOIST", "ALEATORIA"});
     
@@ -55,7 +56,6 @@ public class Graphic extends JFrame {
     private Contexto c1, c2, c3;
     private ContextPanel contextPanel;
     private Timer animationTimer;
-    
     private Chromosome bestChromosome = null;
 
     public Graphic() {
@@ -83,6 +83,9 @@ public class Graphic extends JFrame {
     private void setupTheme() {
         UIManager.put("Panel.background", PANEL_DARK);
         UIManager.put("Label.foreground", TEXT_LIGHT);
+        UIManager.put("CheckBox.background", PANEL_DARK);
+        UIManager.put("CheckBox.foreground", TEXT_LIGHT);
+        
         btnGenMap.setBackground(new Color(60, 60, 35));
         btnGenMap.setForeground(Color.YELLOW);
         btnEvolve.setBackground(new Color(35, 60, 60));
@@ -112,11 +115,13 @@ public class Graphic extends JFrame {
         pProb.add(new JLabel("Prof. Max:")); pProb.add(spMaxDepth);
         pProb.add(new JLabel("Bloating:")); pProb.add(spBloat);
         pProb.add(new JLabel("Semilla:")); pProb.add(spSeed);
+        // Integración de Poda
+        pProb.add(chkPruning); pProb.add(new JLabel("")); 
+        pProb.add(new JLabel("Prof. Poda:")); pProb.add(spPruneDepth);
 
-        // MODIFICADO: Dos columnas para organizar mejor los operadores
         JPanel pOps = new JPanel(new GridLayout(0, 2, 5, 5));
         pOps.setBorder(createTitledBorder("Operadores"));
-        pOps.add(new JLabel("Selección:")); pOps.add(selMethod); // Añadido selector
+        pOps.add(new JLabel("Selección:")); pOps.add(selMethod); 
         pOps.add(new JLabel("Mutación:")); pOps.add(mutMethod);
 
         JPanel pBtn = new JPanel(new GridLayout(4, 1, 5, 5)); 
@@ -179,56 +184,39 @@ public class Graphic extends JFrame {
     
     private String formatAST(NodoAST nodo, int nivel) {
         String indent = "  ".repeat(nivel);
-
-        // --- CASO 1: BLOQUE DE CÓDIGO ---
         if (nodo instanceof NodoBloque bloque) {
             StringBuilder sb = new StringBuilder();
             sb.append(indent).append("{\n"); 
-
             for (NodoAST hijo : bloque.hijos) {
                 sb.append(formatAST(hijo, nivel + 1));
             }
-
             sb.append(indent).append("}\n");
             return sb.toString();
         }
-
-        // --- CASO 2: CONDICIONAL (IF-ELSE) ---
         if (nodo instanceof NodoCondicional cond) {
             StringBuilder sb = new StringBuilder();
-            
-            // Cabecera del IF (indented)
             sb.append(indent).append("IF ( ")
               .append(cond.sensor).append(" > ").append(cond.umbral)
               .append(" )\n");
-
             sb.append(formatAST(cond.getHijoIzquierdo(), nivel));
-
             sb.append(indent).append("ELSE\n");
-
             sb.append(formatAST(cond.getHijoDerecho(), nivel));
-
             return sb.toString();
         }
-
-        // --- CASO 3: ACCIÓN SIMPLE (HOJA) ---
         if (nodo instanceof NodoAccion acc) {
             return indent + acc.getAccion() + "();\n";
         }
-
         return "";
     }
 
     private void generateMaps() {
         if (animationTimer != null) animationTimer.stop(); 
-        
         int seed = (Integer) spSeed.getValue();
         this.c1 = new Contexto(seed, 15, 15);
         this.c2 = new Contexto(seed + 1, 15, 15);
         this.c3 = new Contexto(seed + 2, 15, 15);
         contextPanel.setContext(this.c1);
         contextPanel.updateTrail(new ArrayList<>());
-        
         btnEvolve.setEnabled(true);
         btnRunSim.setEnabled(false);
         bestChromosome = null; 
@@ -247,11 +235,20 @@ public class Graphic extends JFrame {
         btnRunSim.setEnabled(false);
         
         new Thread(() -> {
+            // Actualización de llamada a GARunner.run con los nuevos parámetros
             GAResult result = GARunner.run(
-                c1, c2, c3, (Integer)spPop.getValue(), (Integer)spGen.getValue(), 
-                (Double)spPc.getValue(), (Double)spPm.getValue(), (Double)spElit.getValue(), 
-                (String)selMethod.getSelectedItem(), // NUEVO: Pasamos el método de selección
-                (String)mutMethod.getSelectedItem(), (Integer)spMaxDepth.getValue(), (Double)spBloat.getValue(),
+                c1, c2, c3, 
+                (Integer)spPop.getValue(), 
+                (Integer)spGen.getValue(), 
+                (Double)spPc.getValue(), 
+                (Double)spPm.getValue(), 
+                (Double)spElit.getValue(), 
+                (String)selMethod.getSelectedItem(), 
+                (String)mutMethod.getSelectedItem(), 
+                (Integer)spMaxDepth.getValue(),
+                chkPruning.isSelected(),           // Parámetro 'poda'
+                (Integer)spPruneDepth.getValue(),  // Parámetro 'profPoda'
+                (Double)spBloat.getValue(),
                 (gen, bGen, bEver, avg, bestChr) -> {
                     SwingUtilities.invokeLater(() -> {
                         sBestGen.addOrUpdate(gen, bGen);
@@ -264,16 +261,15 @@ public class Graphic extends JFrame {
             bestChromosome = (Chromosome) result.getBest();
             
             SwingUtilities.invokeLater(() -> {
-            	String ast = formatAST(bestChromosome.getTree(), 0);
-            	double fitness = bestChromosome.getFitness();
-
-            	int tamanoAST = bestChromosome.getTree().tam();
-            	
-            	txtPhenotype.setText(
-            		"FITNESS: " + fitness + "\n" +
-            		"TAMAÑO AST: " + tamanoAST + " nodos\n\n" +
-            	    ast
-            	);
+                String ast = formatAST(bestChromosome.getTree(), 0);
+                double fitness = bestChromosome.getFitness();
+                int tamanoAST = bestChromosome.getTree().tam();
+                
+                txtPhenotype.setText(
+                    "FITNESS: " + fitness + "\n" +
+                    "TAMAÑO AST: " + tamanoAST + " nodos\n\n" +
+                    ast
+                );
                 btnEvolve.setEnabled(true);
                 btnRunSim.setEnabled(true); 
             });
@@ -283,7 +279,6 @@ public class Graphic extends JFrame {
     private void runSimulation() {
         if (bestChromosome == null) return;
         if (animationTimer != null) animationTimer.stop();
-        
         startSimulation(bestChromosome);
     }
 
@@ -296,21 +291,12 @@ public class Graphic extends JFrame {
         animationTimer = new Timer(400, e -> {
             if (!simCtx.estaVivo() || simCtx.getTicks() >= 150) {
                 ((Timer)e.getSource()).stop();
-
-                JOptionPane.showMessageDialog(
-                    this,
-                    "Simulación finalizada",
-                    "Fin",
-                    JOptionPane.INFORMATION_MESSAGE
-                );
+                JOptionPane.showMessageDialog(this, "Simulación finalizada", "Fin", JOptionPane.INFORMATION_MESSAGE);
                 return;
             }
-
             simCtx.setAccionTomada(false);
-
             best.getTree().ejecutar(simCtx);
             trail.add(new Pair(simCtx.getCoordenadas().x(), simCtx.getCoordenadas().y()));
-
             contextPanel.updateTrail(trail);
             contextPanel.repaint();
         });

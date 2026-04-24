@@ -6,7 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import practica.enums.Accion;
 import practica.enums.Sensor;
 
-public class Generator {
+public class Utils {
 
 	private static final Random random = new Random();
 	
@@ -87,5 +87,28 @@ public class Generator {
 	    }
 	}
     
-    
+	public static NodoAST podar(NodoAST nodo, int profActual, int profMax, Random rand) {
+        if (profActual >= profMax) {
+            if (!nodo.isLeaf()) {
+                Accion[] acciones = Accion.values();
+                return new NodoAccion(acciones[rand.nextInt(acciones.length)]);
+            }
+            return nodo;
+        }
+
+        if (nodo instanceof NodoBloque) {
+            NodoBloque bloque = (NodoBloque) nodo;
+            NodoAST[] hijos = bloque.getHijos();
+            for (int i = 0; i < hijos.length; i++) {
+                hijos[i] = podar(hijos[i], profActual + 1, profMax, rand);
+            }
+            return new NodoBloque(hijos);
+        } else if (nodo instanceof NodoCondicional) {
+            NodoCondicional cond = (NodoCondicional) nodo;
+            NodoAST izq = podar(cond.getHijoIzquierdo(), profActual + 1, profMax, rand);
+            NodoAST der = podar(cond.getHijoDerecho(), profActual + 1, profMax, rand);
+            return new NodoCondicional(cond.getSensor(), cond.getUmbral(), izq, der);
+        }
+        return nodo;
+    }
 }

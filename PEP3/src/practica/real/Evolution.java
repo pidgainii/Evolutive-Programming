@@ -55,7 +55,10 @@ public class Evolution {
     public GAResult evolveWithListener(int nGenerations, Population population,
                                        double elitismRate, double pc, double pm, 
                                        String selectionMethodString,
-                                       String mutationMethodString, EvolutionListener listener) {
+                                       String mutationMethodString,
+                                       boolean poda,
+                                       int profPoda,
+                                       EvolutionListener listener) {
 
         Random rand = new Random();
         evaluateAndNormalize(population);
@@ -79,7 +82,8 @@ public class Evolution {
             for (int i = eliteCount; i + 1 < population_size; i += 2) {
                 if (rand.nextDouble() < pc) {
                     Chromosome[] children = Crossover.cross(nextPop.getPopulation().get(i), 
-                                                           nextPop.getPopulation().get(i+1), rand);
+                                                           nextPop.getPopulation().get(i+1), rand,
+                                                           poda, profPoda);
                     nextPop.swap(i, children[0]);
                     nextPop.swap(i+1, children[1]);
                 }
@@ -89,7 +93,7 @@ public class Evolution {
             MutationMethod mth = MutationMethod.valueOf(mutationMethodString);
             for (int i = eliteCount; i < population_size; i++) {
                 if (rand.nextDouble() < pm) {
-                    Mutation.mutate(mth, nextPop.getPopulation().get(i), rand, pm);
+                    Mutation.mutate(mth, nextPop.getPopulation().get(i), rand, pm, poda, profPoda);
                 }
             }
             

@@ -13,4 +13,5 @@
     <fullyQualifiedTypeName name="practica.ast.NodoCondicional"/>
     <fullyQualifiedTypeName name="practica.ast.NodoBloque"/>
     <fullyQualifiedTypeName name="practica.ast.NodoAST"/>
+    <fullyQualifiedTypeName name="practica.ast.Generator"/>
 </qualifiedTypeNameHistroy>
