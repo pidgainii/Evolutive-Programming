@@ -24,10 +24,6 @@ public class Fitness {
         
         double final_fitness =  ((f1 + f2 + f3) / 3.0) - bloating_penalization;
         
-        if (final_fitness > 2000) {
-        	int a = 0;
-        }
-        
         return final_fitness;
     }
     
