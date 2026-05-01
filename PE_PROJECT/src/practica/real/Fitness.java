@@ -46,7 +46,7 @@ public class Fitness {
             if (g > numDeliveries) {
 
                 if (prevDp != null) {
-                    double costBack = board.getCost(prevDp.getId(), BASE_ID);
+                    double costBack = Dijkstra.shortestPathCost(board, prevDp.getId(), BASE_ID);
                     times[current_van] += costBack / van_velocity[current_van];
                 }
 
@@ -68,7 +68,7 @@ public class Fitness {
             // Primera entrega de la van
             if (!started) {
 
-                double costOut = board.getCost(BASE_ID, dp.getId());
+            	double costOut = Dijkstra.shortestPathCost(board, BASE_ID, dp.getId());
 
                 times[current_van] += costOut / van_velocity[current_van];
 
@@ -86,7 +86,7 @@ public class Fitness {
             }
 
             // Entregas intermedias
-            double costSeg = board.getCost(prevDp.getId(), dp.getId());
+            double costSeg = Dijkstra.shortestPathCost(board, prevDp.getId(), dp.getId());
 
             times[current_van] += costSeg / van_velocity[current_van];
 
@@ -103,8 +103,8 @@ public class Fitness {
         // Volver a base
         if (current_van < numVans && prevDp != null) {
 
-            double costBack = board.getCost(prevDp.getId(), BASE_ID);
-
+        	double costBack = Dijkstra.shortestPathCost(board, prevDp.getId(), BASE_ID);
+        	
             times[current_van] += costBack / van_velocity[current_van];
         }
 
