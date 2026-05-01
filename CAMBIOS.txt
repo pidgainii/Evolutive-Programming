@@ -1,0 +1,19 @@
+Board.java
+ - cambio en el bucle para rutas duplicadas
+ - coste calculado directamente en board
+AStar.java
+ - suma el valor del coste del terreno en vez de 1
+ - se calcula la penalización dentro del algoritmo en vez de fuera (para encontrar caminos sin penalización)
+Fitness.java
+ - la función minimiza pero devuelve un valor más grande si es mejor (para ga)
+Selection.java
+ - error al añadir. función añadida para o cambiar valor o añadir a la lista 
+Evolution.java
+ - adding fun evaluateAndNormalize
+ - evolveWithListener cambiada
+
+
+Falta:
+ - dron vaya de inicial -> … -> inicial
+ - mutación y cross
+ - no se
