@@ -29,14 +29,15 @@ public class Fitness {
         double[] times = new double[numVans];
         int current_van = 0;
 
-        // Velocidades de las vans
-        double[] van_velocity_all = {1.5, 1.0, 0.7, 1.2, 0.5, 1.1, 0.9, 1.3, 0.8, 1.4};
+        // Velocidades de las furgonetas
+        double[] van_velocity_all = {8, 7, 9, 10, 7, 11, 9, 7, 10, 7};
+        
         double[] van_velocity = Arrays.copyOf(van_velocity_all, numVans);
 
         DeliveryPoint prevDp = null;
         boolean started = false;
 
-        // Nuevas métricas
+        // Nuevas metricas
         int lateDeliveries = 0;
         boolean[] delivered = new boolean[numDeliveries];
 

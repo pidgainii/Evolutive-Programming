@@ -73,41 +73,56 @@ public class Board {
     }
 
     private void calculateConnectedSparseMatrix(long seed) {
-        Random rand = new Random(seed + 1); 
+        Random rand = new Random(seed + 1);
 
-        // 1. Mandatory Connection (Nearest Neighbor)
+        // 1. Mandatory nearest-neighbor connection
         for (int i = 0; i < allVertices.size(); i++) {
             int closestIdx = -1;
             double minDist = Double.MAX_VALUE;
 
             for (int j = 0; j < allVertices.size(); j++) {
                 if (i == j) continue;
-                double dist = calculateEuclideanDistance(allVertices.get(i), allVertices.get(j));
+
+                double dist = calculateEuclideanDistance(
+                        allVertices.get(i),
+                        allVertices.get(j)
+                );
+
                 if (dist < minDist) {
                     minDist = dist;
                     closestIdx = j;
                 }
             }
+
             if (closestIdx != -1) {
                 adjacencyMatrix[i][closestIdx] = minDist;
                 adjacencyMatrix[closestIdx][i] = minDist;
             }
         }
 
-        // 2. Random Connections
+        // 2. Extra random sparse connections
         for (int i = 0; i < allVertices.size(); i++) {
             for (int j = i + 1; j < allVertices.size(); j++) {
+
                 if (adjacencyMatrix[i][j] == Double.POSITIVE_INFINITY) {
-                    double dist = calculateEuclideanDistance(allVertices.get(i), allVertices.get(j));
-                    if (dist <= MAX_DISTANCE) {
-                        if (rand.nextDouble() < CONNECTION_PROBABILITY) {
-                            adjacencyMatrix[i][j] = dist;
-                            adjacencyMatrix[j][i] = dist;
-                        }
+
+                    double dist = calculateEuclideanDistance(
+                            allVertices.get(i),
+                            allVertices.get(j)
+                    );
+
+                    if (dist <= MAX_DISTANCE &&
+                            rand.nextDouble() < CONNECTION_PROBABILITY) {
+
+                        adjacencyMatrix[i][j] = dist;
+                        adjacencyMatrix[j][i] = dist;
                     }
                 }
             }
         }
+
+        // 3. Ensure full connectivity
+        ensureConnectedGraph();
     }
 
     private double calculateEuclideanDistance(Vertex v1, Vertex v2) {
@@ -123,6 +138,77 @@ public class Board {
             Vertex selected = pool.remove(rand.nextInt(pool.size()));
             deliveryPoints.add(new DeliveryPoint(selected, 5 + rand.nextInt(26)));
         }
+    }
+    
+    private void ensureConnectedGraph() {
+
+        boolean[] visited = new boolean[NUM_TOTAL_POINTS];
+        dfs(0, visited);
+
+        while (!allVisited(visited)) {
+
+            int disconnectedNode = -1;
+
+            for (int i = 0; i < visited.length; i++) {
+                if (!visited[i]) {
+                    disconnectedNode = i;
+                    break;
+                }
+            }
+
+            // Find closest visited node
+            int closestConnected = -1;
+            double minDist = Double.MAX_VALUE;
+
+            for (int i = 0; i < visited.length; i++) {
+
+                if (visited[i]) {
+
+                    double dist = calculateEuclideanDistance(
+                            allVertices.get(i),
+                            allVertices.get(disconnectedNode)
+                    );
+
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closestConnected = i;
+                    }
+                }
+            }
+
+            // Connect component to graph
+            adjacencyMatrix[disconnectedNode][closestConnected] = minDist;
+            adjacencyMatrix[closestConnected][disconnectedNode] = minDist;
+
+            // Recalculate reachability
+            visited = new boolean[NUM_TOTAL_POINTS];
+            dfs(0, visited);
+        }
+    }
+
+    private void dfs(int node, boolean[] visited) {
+
+        visited[node] = true;
+
+        for (int i = 0; i < NUM_TOTAL_POINTS; i++) {
+
+            if (!visited[i] &&
+                    adjacencyMatrix[node][i] != Double.POSITIVE_INFINITY) {
+
+                dfs(i, visited);
+            }
+        }
+    }
+
+    private boolean allVisited(boolean[] visited) {
+
+        for (boolean v : visited) {
+            if (!v) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     // --- Getters ---
